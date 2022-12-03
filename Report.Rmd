@@ -14,6 +14,8 @@ library(knitr)
 library(dplyr)
 library(tidyverse)
 library(e1071)
+library(randomForest)
+library(caret)
 ```
 
 ```{r include=FALSE}
@@ -26,7 +28,9 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 cancer<-read_csv("data.csv")%>%
   select(-...33)%>%
   rename(concave_points_mean='concave points_mean')%>%
-  rename(concave_points_worst='concave points_worst')
+  rename(concave_points_worst='concave points_worst')%>%
+  rename(concave_points_se='concave points_se'
+         )
 ```
 
 
@@ -68,7 +72,16 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 
 ## Radial Kernel
 
-```{r}
+## Random Forest
 
+```{r}
+rf <- randomForest(diagnosis_binary~., data=cancer_train, proximity=TRUE)
+print(rf)
 ```
+
+```{r}
+p2 <- predict(rf, cancer_test)
+confusionMatrix(p2, cancer_test$diagnosis_binary)
+```
+
 
