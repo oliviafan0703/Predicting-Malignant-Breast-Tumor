@@ -47,6 +47,7 @@ cancer_binary<-cancer%>%
 We partition the data into training and testing sets using a 70-30 percentage split(70% of the original data as the training set, and 30% as the testing set):
 
 ```{r}
+set.seed(123)
 dt = sort(sample(nrow(cancer_binary), nrow(cancer_binary)*.7))
 cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
@@ -87,6 +88,36 @@ ggplot(data = cancer, mapping = aes(x = diagnosis)) +
 ```
 The bar plot shows that there is a larger number of benign than malignant cancer. 
 
+We divide the data into 3 categories according to their features.
+```{r}
+features_mean= cancer[2:10]
+features_se= cancer[11:20]
+features_worst= cancer[21:31]
+```
+
+
+```{r}
+library(corrplot)
+corrplot(cor(features_mean))
+```
+Major observations: 
+
+- Radius_mean, perimeter_mean, and area_mean are highly correlated.
+
+- Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
+
+## Random Forest
+
+```{r}
+rf <- randomForest(diagnosis_binary~texture_mean + perimeter_mean + smoothness_mean + compactness_mean + symmetry_mean, data=cancer_train, proximity=TRUE)
+print(rf)
+```
+
+```{r}
+p2 <- predict(rf, cancer_test)
+confusionMatrix(p2, cancer_test$diagnosis_binary)
+```
+
 
 ## Linear Kernel SVM
 
@@ -125,18 +156,4 @@ ypred <- predict(best_radial_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
-
-
-## Random Forest
-
-```{r}
-rf <- randomForest(diagnosis_binary~., data=cancer_train, proximity=TRUE)
-print(rf)
-```
-
-```{r}
-p2 <- predict(rf, cancer_test)
-confusionMatrix(p2, cancer_test$diagnosis_binary)
-```
-
 
