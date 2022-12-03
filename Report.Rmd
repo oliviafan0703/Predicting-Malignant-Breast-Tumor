@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```{r load-data, message = FALSE, echo=F}
 cancer<-read_csv("data.csv")%>%
   select(-...33)%>%
-  select(-id)$>$
+  select(-id)%>%
   rename(concave_points_mean='concave points_mean')%>%
   rename(concave_points_worst='concave points_worst')%>%
   rename(concave_points_se='concave points_se'
@@ -52,6 +52,34 @@ cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
 ```
 
+
+## Model Selection (Lasso penalized logistic regression)
+
+```{r}
+# Dumy code categorical predictor variables
+x <- model.matrix(diagnosis~.-diagnosis_binary, cancer_train)[,-1]
+# Convert the outcome (class) to a numerical variable
+y <- ifelse(cancer_train$diagnosis == "M", 1, 0)
+```
+
+
+```{r}
+library(glmnet)
+# Find the best lambda using cross-validation
+set.seed(123)
+cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
+plot(cv.lasso)
+```
+
+```{r}
+cv.lasso$lambda.min
+# Final model with lambda.min
+lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
+                      lambda = cv.lasso$lambda.min)
+coef(lasso.model)
+```
+
+
 ## EDA
 ```{r}
 ggplot(data = cancer, mapping = aes(x = diagnosis)) +
@@ -60,7 +88,7 @@ ggplot(data = cancer, mapping = aes(x = diagnosis)) +
 The bar plot shows that there is a larger number of benign than malignant cancer. 
 
 
-## SVM
+## Linear Kernel SVM
 
 ```{r}
 # set.seed(3)
@@ -79,7 +107,7 @@ table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
 
-## SVM Radial Kernel
+## Radial Kernel SVM
 
 ```{r}
 set.seed(1)
