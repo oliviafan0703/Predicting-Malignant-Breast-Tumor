@@ -23,7 +23,7 @@ library(ggplot2)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-## Data Processing
+# Data Processing
 
 ```{r load-data, message = FALSE, echo=F}
 cancer<-read_csv("data.csv")%>%
@@ -53,6 +53,35 @@ cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
 ```
 
+# EDA
+```{r}
+ggplot(data = cancer, mapping = aes(x = diagnosis)) +
+  geom_bar()
+```
+The bar plot shows that there is a larger number of benign than malignant cancer. 
+
+We divide the data into 3 categories according to their features.
+```{r}
+features_mean= cancer[2:10]
+features_se= cancer[11:20]
+features_worst= cancer[21:31]
+```
+
+
+```{r}
+library(corrplot)
+corrplot(cor(features_mean))
+```
+
+Major observations: 
+
+- Radius_mean, perimeter_mean, and area_mean are highly correlated.
+
+- Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
+
+# Methodology 
+
+# SVM
 
 ## Model Selection (Lasso penalized logistic regression)
 
@@ -81,50 +110,15 @@ coef(lasso.model)
 ```
 
 
-## EDA
-```{r}
-ggplot(data = cancer, mapping = aes(x = diagnosis)) +
-  geom_bar()
-```
-The bar plot shows that there is a larger number of benign than malignant cancer. 
-
-We divide the data into 3 categories according to their features.
-```{r}
-features_mean= cancer[2:10]
-features_se= cancer[11:20]
-features_worst= cancer[21:31]
-```
-
-
-```{r}
-library(corrplot)
-corrplot(cor(features_mean))
-```
-Major observations: 
-
-- Radius_mean, perimeter_mean, and area_mean are highly correlated.
-
-- Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
-
-## Random Forest
-
-```{r}
-rf <- randomForest(diagnosis_binary~texture_mean + perimeter_mean + smoothness_mean + compactness_mean + symmetry_mean, data=cancer_train, proximity=TRUE)
-print(rf)
-```
-
-```{r}
-p2 <- predict(rf, cancer_test)
-confusionMatrix(p2, cancer_test$diagnosis_binary)
-```
-
-
 ## Linear Kernel SVM
 
-```{r}
-# set.seed(3)
+We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model:
 
-tune.out <- tune(svm, diagnosis_binary ~ ., data = cancer_train, kernel = "linear",
+```{r}
+set.seed(3)
+
+tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+
+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
 summary(tune.out)
@@ -136,13 +130,18 @@ summary(best_linear_svm)
 ypred <- predict(best_linear_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
+classification_error
 ```
+
+The misclassification rate is 0.0467.
+
 
 ## Radial Kernel SVM
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ ., data = cancer_train,
+tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+
+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train,
                  kernel = "radial", 
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
@@ -157,3 +156,14 @@ table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
 
+# Random Forest
+
+```{r}
+rf <- randomForest(diagnosis_binary~texture_mean + perimeter_mean + smoothness_mean + compactness_mean + symmetry_mean, data=cancer_train, proximity=TRUE)
+print(rf)
+```
+
+```{r}
+p2 <- predict(rf, cancer_test)
+confusionMatrix(p2, cancer_test$diagnosis_binary)
+```
