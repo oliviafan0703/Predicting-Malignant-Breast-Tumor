@@ -19,6 +19,45 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
+## Data Processing
+
 ```{r load-data, message = FALSE, echo=F}
-cancer_data<-read_csv("data.csv")
+cancer<-read_csv("data.csv")%>%
+  select(-...33)
 ```
+
+In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 and -1:
+
+
+```{r}
+cancer_binary<-cancer%>%
+  mutate(diagnosis_binary=as.factor(ifelse(diagnosis=="M",1,-1)))
+```
+
+We partition the data into training and testing sets using a 70-30 percentage split(70% of the original data as the training set, and 30% as the testing set):
+
+```{r}
+dt = sort(sample(nrow(cancer_binary), nrow(cancer_binary)*.7))
+cancer_train<-cancer_binary[dt,]
+cancer_test<-cancer_binary[-dt,]
+```
+
+## SVM
+
+```{r}
+# set.seed(3)
+
+tune.out <- tune(svm, diagnosis_binary ~ ., data = cancer_train, kernel = "linear",
+                 ranges = list(cost = c(0.001, 0.01, 0.1,
+                                        1, 5, 10, 100)))
+summary(tune.out)
+best_linear_svm <- tune.out$best.model
+summary(best_linear_svm)
+```
+
+```{r}
+ypred <- predict(best_linear_svm, cancer_test)
+table(predict = ypred, truth = cancer_test$diagnosis_binary)
+classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
+```
+
