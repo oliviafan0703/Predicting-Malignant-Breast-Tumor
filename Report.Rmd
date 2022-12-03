@@ -47,6 +47,7 @@ cancer_binary<-cancer%>%
 We partition the data into training and testing sets using a 70-30 percentage split(70% of the original data as the training set, and 30% as the testing set):
 
 ```{r}
+set.seed(123)
 dt = sort(sample(nrow(cancer_binary), nrow(cancer_binary)*.7))
 cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
@@ -127,5 +128,4 @@ ypred <- predict(best_radial_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
-
 
