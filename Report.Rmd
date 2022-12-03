@@ -16,6 +16,7 @@ library(tidyverse)
 library(e1071)
 library(randomForest)
 library(caret)
+library(ggplot2)
 ```
 
 ```{r include=FALSE}
@@ -49,6 +50,14 @@ dt = sort(sample(nrow(cancer_binary), nrow(cancer_binary)*.7))
 cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
 ```
+
+## EDA
+```{r}
+ggplot(data = cancer, mapping = aes(x = diagnosis)) +
+  geom_bar()
+```
+The bar plot shows that there is a larger number of benign than malignant cancer. 
+
 
 ## SVM
 
