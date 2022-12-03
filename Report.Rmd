@@ -13,6 +13,7 @@ output:
 library(knitr)
 library(dplyr)
 library(tidyverse)
+library(e1071)
 ```
 
 ```{r include=FALSE}
@@ -23,8 +24,11 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 ```{r load-data, message = FALSE, echo=F}
 cancer<-read_csv("data.csv")%>%
-  select(-...33)
+  select(-...33)%>%
+  rename(concave_points_mean='concave points_mean')%>%
+  rename(concave_points_worst='concave points_worst')
 ```
+
 
 In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 and -1:
 
@@ -59,5 +63,12 @@ summary(best_linear_svm)
 ypred <- predict(best_linear_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
+```
+
+
+## Radial Kernel
+
+```{r}
+
 ```
 
