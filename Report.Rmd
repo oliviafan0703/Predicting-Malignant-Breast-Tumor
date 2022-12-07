@@ -260,9 +260,12 @@ rf <- randomForest(diagnosis_binary~.-diagnosis, data=cancer_train, proximity=TR
 importance(rf)
 ```
 
+Select best mtry:
+
 mean:
 ```{r}
-rf_mean <- randomForest(diagnosis_binary~radius_mean + perimeter_mean + area_mean + concavity_mean + concave_points_mean, data = cancer_train, proximity=TRUE)
+set.seed(123)
+rf_mean <- randomForest(diagnosis_binary~radius_mean + perimeter_mean + area_mean + concavity_mean + concave_points_mean, data = cancer_train, proximity=TRUE, mtry=4)
 print(rf_mean)
 ```
 ```{r}
@@ -279,3 +282,38 @@ print(rf_worst)
 pred_worst <- predict(rf_worst, cancer_test)
 confusionMatrix(pred_worst, cancer_test$diagnosis_binary)
 ```
+
+```{r}
+ImpData <- as.data.frame(importance(rf_mean))
+ImpData$Var.Names <- row.names(ImpData)
+
+ggplot(ImpData, aes(x=Var.Names, y= MeanDecreaseGini)) +
+  geom_segment(aes(x=Var.Names, xend=Var.Names, y=0, yend=MeanDecreaseGini), color="skyblue") +
+  theme_light() +
+  coord_flip() +
+  theme(
+    legend.position="bottom",
+    panel.grid.major.y = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+We observe that 'concave_points_mean' has the highest purity, so it is 
+
+```{r}
+mean_predictors <- cancer_train %>% select(radius_mean, perimeter_mean, area_mean, concavity_mean, concave_points_mean)
+mtry <- tuneRF(mean_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
+               stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)
+best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
+print(mtry)
+print(best.m)
+```
+```{r}
+worst_predictors <- cancer_train %>% select(radius_worst, perimeter_worst, area_worst, concavity_worst, concave_points_worst)
+mtryw <- tuneRF(worst_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
+               stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)
+best.w <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
+print(mtryw)
+print(best.w)
+```
+
