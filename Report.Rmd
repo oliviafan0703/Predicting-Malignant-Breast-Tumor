@@ -79,6 +79,32 @@ Major observations:
 
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
+
+```{r}
+library(psych)
+library(BioStatR)
+
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, color = "dodgerblue3", ...)
+}
+
+pairs(cancer[2:10], 
+             method = "pearson", # correlation method
+             digits=3,
+             pch = '.',
+             col=ifelse(cancer$diagnosis=="M", "red", "blue"),
+             density = TRUE,  # show density plots
+             ellipses = TRUE, # show correlation ellipses
+             diag.panel =  panel.hist
+             )
+```
+
 # Methodology 
 
 # SVM
@@ -114,9 +140,10 @@ coef(lasso.model)
 
 We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model:
 
-```{r}
-set.seed(3)
+If two predictors have high correlation, only use one of them:
 
+```{r}
+set.seed(1)
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+
 fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
@@ -140,9 +167,8 @@ The misclassification rate is 0.0467.
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+
-fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train,
-                 kernel = "radial", 
+tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train,
+                 kernel = "radial",
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
 summary(tune.out)
@@ -155,6 +181,39 @@ ypred <- predict(best_radial_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
+
+
+# SVM Visualization
+
+## Linear
+
+```{r, echo=FALSE}
+tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se, data = cancer_train, kernel = "linear",
+                 ranges = list(cost = c(0.001, 0.01, 0.1,
+                                        1, 5, 10, 100)))
+best_linear_graph <- tune.out$best.model
+```
+
+```{r}
+plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
+
+plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
+```
+## Radial
+
+```{r, echo=FALSE}
+tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se,
+                 kernel = "radial", data = cancer_train,
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)))
+best_radial_graph <- tune.out$best.model
+```
+
+```{r}
+plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
+plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
+```
+
 
 # Random Forest
 
