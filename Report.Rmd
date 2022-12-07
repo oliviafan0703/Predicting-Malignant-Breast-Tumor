@@ -17,6 +17,8 @@ library(e1071)
 library(randomForest)
 library(caret)
 library(ggplot2)
+library(psych)
+library(BioStatR)
 ```
 
 ```{r include=FALSE}
@@ -81,9 +83,6 @@ Major observations:
 
 
 ```{r}
-library(psych)
-library(BioStatR)
-
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -160,7 +159,7 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.0467.
+The misclassification rate is 0.01754.
 
 
 ## Radial Kernel SVM
@@ -199,6 +198,7 @@ plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
 
 plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
 ```
+
 ## Radial
 
 ```{r, echo=FALSE}
@@ -213,6 +213,44 @@ best_radial_graph <- tune.out$best.model
 plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
 plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
+
+
+## ROC (Linear SVM)
+
+On train data: 
+
+```{r}
+library(pROC)
+fitted <- attributes(predict(best_linear_svm, cancer_train,
+                             decision.values=TRUE))$decision.values
+ROC_svm1 <- roc(cancer_train$diagnosis_binary, fitted)
+
+fitted <- attributes(predict(best_radial_svm, cancer_train,
+                             decision.values=TRUE))$decision.values
+ROC_svm2 <- roc(cancer_train$diagnosis_binary, fitted)
+plot(ROC_svm1, col = "blue")
+lines(ROC_svm2, col = "red")
+legend("bottomright", legend = c("Linear", "Radial"), 
+       col = c("blue", "red"), lty = 1)
+```
+
+On test data: 
+
+```{r}
+fitted <- attributes(predict(best_linear_svm, cancer_test,
+                             decision.values=TRUE))$decision.values
+ROC_svm1 <- roc(cancer_test$diagnosis_binary, fitted)
+
+fitted <- attributes(predict(best_radial_svm, cancer_test,
+                             decision.values=TRUE))$decision.values
+ROC_svm2 <- roc(cancer_test$diagnosis_binary, fitted)
+plot(ROC_svm1, col = "blue")
+lines(ROC_svm2, col = "red")
+legend("bottomright", legend = c("Linear", "Radial"), 
+       col = c("blue", "red"), lty = 1)
+```
+
+
 
 
 # Random Forest
