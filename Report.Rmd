@@ -218,11 +218,26 @@ plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 # Random Forest
 
 ```{r}
-rf <- randomForest(diagnosis_binary~texture_mean + perimeter_mean + smoothness_mean + compactness_mean + symmetry_mean, data=cancer_train, proximity=TRUE)
-print(rf)
+rf <- randomForest(diagnosis_binary~.-diagnosis, data=cancer_train, proximity=TRUE)
+importance(rf)
+```
+
+mean:
+```{r}
+rf_mean <- randomForest(diagnosis_binary~radius_mean + perimeter_mean + area_mean + concavity_mean + concave_points_mean, data = cancer_train, proximity=TRUE)
+print(rf_mean)
+```
+```{r}
+pred_mean <- predict(rf_mean, cancer_test)
+confusionMatrix(pred_mean, cancer_test$diagnosis_binary)
 ```
 
 ```{r}
-p2 <- predict(rf, cancer_test)
-confusionMatrix(p2, cancer_test$diagnosis_binary)
+rf_worst <- randomForest(diagnosis_binary~radius_worst + perimeter_worst + area_worst + concave_points_worst + concavity_worst, data=cancer_train, proximity=TRUE)
+print(rf_worst)
+```
+
+```{r}
+pred_worst <- predict(rf_worst, cancer_test)
+confusionMatrix(pred_worst, cancer_test$diagnosis_binary)
 ```
