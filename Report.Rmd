@@ -106,9 +106,9 @@ pairs(cancer[2:10],
 
 # Methodology 
 
-# SVM
+# Model 1: LASSO-Penalized Logistic Regression
 
-## Model Selection (Lasso penalized logistic regression)
+## Model Selection
 
 ```{r}
 # Dumy code categorical predictor variables
@@ -134,6 +134,40 @@ lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
 coef(lasso.model)
 ```
 
+## Prediction
+
+Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities
+
+```{r}
+# Make predictions on the test data
+x.test <- model.matrix(diagnosis~.-diagnosis_binary, cancer_test)[,-1]
+probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
+predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
+
+#Present the prediction
+predictors<-cancer_test%>%select(texture_mean,concave_points_mean,radius_se,texture_se,area_se,smoothness_se,compactness_se,fractal_dimension_se,radius_worst,texture_worst,smoothness_worst,concavity_worst,concave_points_worst,symmetry_worst)
+predicted_results<-cbind(predictors,probabilities)%>%
+  rename(probabilities=s0)
+predicted_results<-cbind(predicted_results,predicted.classes)%>%
+  rename("predicted_class"=s0)
+predicted_results%>%kable(digits=3)
+# Model accuracy
+observed.classes <- cancer_test$diagnosis
+mean(predicted.classes == observed.classes)
+```
+
+We achieved a prediction accuracy of 0.9766. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
+Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
+Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
+
+# Model 1.2: Logistic Regression with Interaction Terms
+
+```{r}
+logistic_interaction <- glm(diagnosis_binary~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+radius_se*radius_worst, data = cancer_train, family = "binomial")
+summary(logistic_interaction)
+```
+
+# Model 2: SVM
 
 ## Linear Kernel SVM
 
@@ -143,8 +177,7 @@ If two predictors have high correlation, only use one of them:
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+
-fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train, kernel = "linear",
+tune.out <- tune(svm, diagnosis_binary ~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
 summary(tune.out)
@@ -166,7 +199,7 @@ The misclassification rate is 0.01754.
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+concave_points_mean+radius_se+texture_se+smoothness_se+compactness_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+fractal_dimension_worst, data = cancer_train,
+tune.out <- tune(svm, diagnosis_binary ~ texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train,
                  kernel = "radial",
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
@@ -181,8 +214,22 @@ table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
 
+## VISUALIZATION FOR ORIGINAL MODEL
 
-# SVM Visualization
+```{r}
+plot(best_linear_svm, cancer_train, radius_se~concavity_mean)
+plot(best_linear_svm, cancer_train, smoothness_se~concavity_mean)
+
+plotpairs=function(fit){
+  for (name in names(cancer_train)[!(names(cancer_train) %in% c("diagnosis", "diagnosis_binary"))]){
+    plot(fit, cancer_train, as.formula(paste("radius_se~", name, sep=" ")))
+  }
+}
+
+plotpairs(best_linear_svm)
+```
+
+## SVM Visualization
 
 ## Linear
 
@@ -253,7 +300,7 @@ legend("bottomright", legend = c("Linear", "Radial"),
 
 
 
-# Random Forest
+# Model 3: Random Forest
 
 ```{r}
 rf <- randomForest(diagnosis_binary~.-diagnosis, data=cancer_train, proximity=TRUE)
