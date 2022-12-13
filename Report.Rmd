@@ -25,7 +25,27 @@ library(BioStatR)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
+# Introduction
+
+Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US (Mayo). Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men (CDC). 
+
+Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Mammography is an effective X-ray imaging technology that detects breast cancer early. Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on clinical parameters. However, diagnosing cancer is challenging even for the most skilled doctors. Since masses are heterogeneous, clinical parameters supply limited information on mammography mass. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
+
+Cancerous lumps are often confused for blocked milk ducts, breast cysts, and other benign conditions. According to an expansive study conducted by Dartmouth College, the University of Vermont, and the Fred Hutchinson Cancer Research Center, and published in the March 2015 issue of the Journal of American Medical Association, approximately 13% of the diagnoses missed Stage 1 breast cancer. Meanwhile, 48% failed to detect atypia hyperplasia, a precursor to breast cancer. A significant number also over-diagnosed atypia hyperplasia. 
+
+There is, therefore, an urgent need to find new tools that can identify patients with breast cancer. Our study aims to build supervised machine-learning models to predict the diagnosis of breast cancer and understand the most important variables, to assist doctors and radiologists in accurately interpreting mammography imaging. 
+
+We built 3 models in total: Lasso penalized logistic regression, SVM, and Random Forest.
+
+# Data
+
+We obtain the Breast Cancer Wisconsin (Diagnosis) Data Set from Kaggle. The dataset contains diagnosis results and features of the cell nuclei computed from a digitized image of a fine needle aspirate (FNA) of a breast mass for 568 patients. The size of the nucleus is expressed by the features radius and area. The shape is expressed by the features smoothness, concavity, compactness, concave points, symmetry, and fractal dimension. The perimeter expresses both the size and shape of the nucleus. A higher value of shape features corresponds to a less regular contour and, therefore, to a higher probability of malignancy. For each of the features the mean value, worst value (mean of the three largest values),
+and standard error are computed for each image, resulting in 30 features of
+568 images.
+
 # Data Processing
+
+The original dataset contains a blank column '...33', so we dropped it. We also dropped the 'id' column, and rename several columns that contains blank space in their names. 
 
 ```{r load-data, message = FALSE, echo=F}
 cancer<-read_csv("data.csv")%>%
@@ -39,7 +59,6 @@ cancer<-read_csv("data.csv")%>%
 
 
 In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 and -1:
-
 
 ```{r}
 cancer_binary<-cancer%>%
@@ -69,7 +88,6 @@ features_se= cancer[11:20]
 features_worst= cancer[21:31]
 ```
 
-
 ```{r}
 library(corrplot)
 corrplot(cor(features_mean))
@@ -82,7 +100,7 @@ Major observations:
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
-```{r}
+```{r, warning=FALSE}
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -106,9 +124,9 @@ pairs(cancer[2:10],
 
 # Methodology 
 
-# Model 1: LASSO-Penalized Logistic Regression
+## Model 1: LASSO-Penalized Logistic Regression
 
-## Model Selection
+### Model Selection
 
 ```{r}
 # Dumy code categorical predictor variables
@@ -134,7 +152,7 @@ lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
 coef(lasso.model)
 ```
 
-## Prediction
+### Prediction
 
 Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities
 
@@ -160,16 +178,16 @@ We achieved a prediction accuracy of 0.9766. To interpret the predictions, we se
 Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
 Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
 
-# Model 1.2: Logistic Regression with Interaction Terms
+## Model 1.2: Logistic Regression with Interaction Terms
 
 ```{r}
 logistic_interaction <- glm(diagnosis_binary~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+radius_se*radius_worst, data = cancer_train, family = "binomial")
 summary(logistic_interaction)
 ```
 
-# Model 2: SVM
+## Model 2: SVM
 
-## Linear Kernel SVM
+### Linear Kernel SVM
 
 We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model:
 
@@ -195,7 +213,7 @@ classification_error
 The misclassification rate is 0.01754.
 
 
-## Radial Kernel SVM
+### Radial Kernel SVM
 
 ```{r}
 set.seed(1)
@@ -214,7 +232,7 @@ table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 ```
 
-## VISUALIZATION FOR ORIGINAL MODEL
+### VISUALIZATION FOR ORIGINAL MODEL
 
 ```{r}
 plot(best_linear_svm, cancer_train, radius_se~concavity_mean)
@@ -229,9 +247,9 @@ plotpairs=function(fit){
 plotpairs(best_linear_svm)
 ```
 
-## SVM Visualization
+### SVM Visualization
 
-## Linear
+#### Linear
 
 ```{r, echo=FALSE}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se, data = cancer_train, kernel = "linear",
@@ -246,7 +264,7 @@ plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
 plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
 ```
 
-## Radial
+### Radial
 
 ```{r, echo=FALSE}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se,
@@ -262,7 +280,7 @@ plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
 
 
-## ROC (Linear SVM)
+### ROC (Linear SVM)
 
 On train data: 
 
@@ -297,44 +315,46 @@ legend("bottomright", legend = c("Linear", "Radial"),
        col = c("blue", "red"), lty = 1)
 ```
 
+## Model 3: Random Forest
 
+For Random Forest, we decided to use group 'Mean' and group 'Worst' separately. This is because, we want to understand the potential difference in prediction given the different level of severity of the patients' conditions. As we have mentioned in the introduction, 'Worst' measures mean of the three
+largest values. By building a model with only 'Mean' and 'Worst' variables, we think we can better understand the extreme cases. 
 
-
-# Model 3: Random Forest
+First, We select variables by running a preliminary random forest model with all the variables, to rank their importance. 
 
 ```{r}
 rf <- randomForest(diagnosis_binary~.-diagnosis, data=cancer_train, proximity=TRUE)
 importance(rf)
 ```
+After testing different variables based on their important, and taking into accounts the collinearity issue we discussed in the EDA section, we decided to select the following variables as the predictors:
+concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_mean, perimeter_mean, concavity_worst, area_se.
 
-Select best mtry:
-
-mean:
+We chose mtry=2, because after tuning mtry, we found that mtry=2 has the lowest OOB error.
 ```{r}
 set.seed(123)
-rf_mean <- randomForest(diagnosis_binary~radius_mean + perimeter_mean + area_mean + concavity_mean + concave_points_mean, data = cancer_train, proximity=TRUE, mtry=4)
-print(rf_mean)
+rf_predictors <- cancer_train %>% select(concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_mean, perimeter_mean, concavity_worst, area_se)
+mtry <- tuneRF(mix_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
+               stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE, doBest = TRUE)
 ```
-```{r}
-pred_mean <- predict(rf_mean, cancer_test)
-confusionMatrix(pred_mean, cancer_test$diagnosis_binary)
-```
+We chose the number of tree to be 500. The number of trees should be chosen carefully, since a high performance of the individual models might lead to overfitting when the number of trees is very high. However, taking 50 trees caused a lower accuracy than taking 500 trees. Therefore, this higher number
+of trees is chosen. 
 
 ```{r}
-rf_worst <- randomForest(diagnosis_binary~radius_worst + perimeter_worst + area_worst + concave_points_worst + concavity_worst, data=cancer_train, proximity=TRUE)
-print(rf_worst)
+set.seed(123)
+rf_mix <- randomForest(diagnosis_binary~concave_points_worst+area_worst+perimeter_worst+radius_worst+concave_points_mean+perimeter_mean+concavity_worst+area_se, data = cancer_train, proximity=TRUE, mtry=2)
+print(rf_mix)
 ```
+```{r}
+pred_mix <- predict(rf_mix, cancer_test)
+confusionMatrix(pred_mix, cancer_test$diagnosis_binary)
+```
+The RF model yields a 96% accuracy for the testing set. 
 
 ```{r}
-pred_worst <- predict(rf_worst, cancer_test)
-confusionMatrix(pred_worst, cancer_test$diagnosis_binary)
-```
+ImpDatamix <- as.data.frame(importance(rf_mix))
+ImpDatamix$Var.Names <- row.names(ImpDatamix)
 
-```{r}
-ImpData <- as.data.frame(importance(rf_mean))
-ImpData$Var.Names <- row.names(ImpData)
-
-ggplot(ImpData, aes(x=Var.Names, y= MeanDecreaseGini)) +
+ggplot(ImpDatamix, aes(x=Var.Names, y= MeanDecreaseGini)) +
   geom_segment(aes(x=Var.Names, xend=Var.Names, y=0, yend=MeanDecreaseGini), color="skyblue") +
   theme_light() +
   coord_flip() +
@@ -345,22 +365,9 @@ ggplot(ImpData, aes(x=Var.Names, y= MeanDecreaseGini)) +
     axis.ticks.y = element_blank()
   )
 ```
-We observe that 'concave_points_mean' has the highest purity, so it is 
+From the plot we can see that the most important predictors are: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst has high gini coefficient, but perimeter_mean ranks second from the last.
 
-```{r}
-mean_predictors <- cancer_train %>% select(radius_mean, perimeter_mean, area_mean, concavity_mean, concave_points_mean)
-mtry <- tuneRF(mean_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
-               stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)
-best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
-print(mtry)
-print(best.m)
-```
-```{r}
-worst_predictors <- cancer_train %>% select(radius_worst, perimeter_worst, area_worst, concavity_worst, concave_points_worst)
-mtryw <- tuneRF(worst_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
-               stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)
-best.w <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
-print(mtryw)
-print(best.w)
-```
+# Conclusion
+
+Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
 
