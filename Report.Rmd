@@ -163,7 +163,7 @@ Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor.
 # Model 1.2: Logistic Regression with Interaction Terms
 
 ```{r}
-logistic_interaction <- glm(diagnosis_binary~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+radius_se*radius_worst, data = cancer_train, family = "binomial")
+logistic_interaction <- glm(diagnosis_binary~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train, family = "binomial")
 summary(logistic_interaction)
 ```
 
