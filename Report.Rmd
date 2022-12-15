@@ -60,14 +60,14 @@ cancer<-read_csv("data.csv")%>%
 
 In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 and -1:
 
-```{r}
+```{r, echo=F, warning=F}
 cancer_binary<-cancer%>%
   mutate(diagnosis_binary=as.factor(ifelse(diagnosis=="M",1,-1)))
 ```
 
 We partition the data into training and testing sets using a 70-30 percentage split(70% of the original data as the training set, and 30% as the testing set):
 
-```{r}
+```{r, echo=F, warning=F}
 set.seed(123)
 dt = sort(sample(nrow(cancer_binary), nrow(cancer_binary)*.7))
 cancer_train<-cancer_binary[dt,]
@@ -75,20 +75,22 @@ cancer_test<-cancer_binary[-dt,]
 ```
 
 # EDA
-```{r}
+```{r, echo=F, warning=F, fig.height = 2, fig.width = 2}
+options(repr.plot.width = 10, repr.plot.height = 5)
 ggplot(data = cancer, mapping = aes(x = diagnosis)) +
   geom_bar()
 ```
+
 The bar plot shows that there is a larger number of benign than malignant cancer. 
 
 We divide the data into 3 categories according to their features.
-```{r}
+```{r, echo=F, warning=F}
 features_mean= cancer[2:10]
 features_se= cancer[11:20]
 features_worst= cancer[21:31]
 ```
 
-```{r}
+```{r, echo=F, warning=F}
 library(corrplot)
 corrplot(cor(features_mean))
 ```
@@ -100,7 +102,7 @@ Major observations:
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
-```{r, warning=FALSE}
+```{r, echo=F, warning=F}
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -122,19 +124,41 @@ pairs(cancer[2:10],
              )
 ```
 
+We observe from the scatterplot matrix that the two classifications seem to be generally separable, with distinct regions in the scatterplot visualization of the association with the predictors.
+
+```{r, echo=F, warning=F, fig.height = 15, fig.width = 20}
+source("Functions.R")
+# Read data
+df = read.csv('data.csv')
+# Identify the outcome and features
+outcomes = c("diagnosis")
+features = names(df)[3:(ncol(df)-1)]
+# Keep outcome and features only
+df = df[, c(outcomes, features)]
+# The outcome is a dichotomous variable. Convert to `factor` to reflect this. Make 'Benign' the first (reference) level.
+df$diagnosis = factor(df$diagnosis, levels = c('B', 'M'))
+# options(repr.plot.width = 20, repr.plot.height = 15)
+plot_data(df, 'diagnosis')
+```
+
+After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
+
 # Methodology 
 
 ## Model 1: LASSO-Penalized Logistic Regression
 
+We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model.
+
 ### Model Selection
+
+We included the interaction term `symmetry_worst*concave_points_mean` to explore the interaction between symmetery and the mean for number of concave portions of the contour.
 
 ```{r}
 # Dumy code categorical predictor variables
-x <- model.matrix(diagnosis~.-diagnosis_binary, cancer_train)[,-1]
+x <- model.matrix(diagnosis~.-diagnosis_binary+symmetry_worst*concave_points_mean, cancer_train)[,-1]
 # Convert the outcome (class) to a numerical variable
 y <- ifelse(cancer_train$diagnosis == "M", 1, 0)
 ```
-
 
 ```{r}
 library(glmnet)
@@ -152,13 +176,14 @@ lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
 coef(lasso.model)
 ```
 
+
 ### Prediction
 
-Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities
+Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities that a tumor is benigh or malignant given the values of the predictors:
 
 ```{r}
 # Make predictions on the test data
-x.test <- model.matrix(diagnosis~.-diagnosis_binary, cancer_test)[,-1]
+x.test <- model.matrix(diagnosis~.-diagnosis_binary+symmetry_worst*concave_points_mean, cancer_test)[,-1]
 probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
 
@@ -168,22 +193,15 @@ predicted_results<-cbind(predictors,probabilities)%>%
   rename(probabilities=s0)
 predicted_results<-cbind(predicted_results,predicted.classes)%>%
   rename("predicted_class"=s0)
-predicted_results%>%kable(digits=3)
+predicted_results%>%head(10)%>%kable(digits=3)
 # Model accuracy
 observed.classes <- cancer_test$diagnosis
 mean(predicted.classes == observed.classes)
 ```
 
-We achieved a prediction accuracy of 0.9766. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
+We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
 Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
 Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
-
-## Model 1.2: Logistic Regression with Interaction Terms
-
-```{r}
-logistic_interaction <- glm(diagnosis_binary~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train, family = "binomial")
-summary(logistic_interaction)
-```
 
 ## Model 2: SVM
 
@@ -191,11 +209,11 @@ summary(logistic_interaction)
 
 We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model:
 
-If two predictors have high correlation, only use one of them:
+If two predictors have high correlation, we only use one of them:
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train, kernel = "linear",
+tune.out <- tune(svm, diagnosis_binary ~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+concave_points_mean*symmetry_worst, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
 summary(tune.out)
@@ -210,14 +228,14 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.01754.
+The misclassification rate is 0.02923.
 
 
 ### Radial Kernel SVM
 
 ```{r}
 set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst, data = cancer_train,
+tune.out <- tune(svm, diagnosis_binary ~ texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+concave_points_mean*symmetry_worst, data = cancer_train,
                  kernel = "radial",
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
@@ -230,22 +248,11 @@ summary(best_radial_svm)
 ypred <- predict(best_radial_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
+classification_error
 ```
 
-### VISUALIZATION FOR ORIGINAL MODEL
+The misclassification rate is 0.03509, which is greater than that of the linear kernel which suggests that the two classes are likely to be linearly separable so that we can find a separating hyperplane using the linear kernel.
 
-```{r}
-plot(best_linear_svm, cancer_train, radius_se~concavity_mean)
-plot(best_linear_svm, cancer_train, smoothness_se~concavity_mean)
-
-plotpairs=function(fit){
-  for (name in names(cancer_train)[!(names(cancer_train) %in% c("diagnosis", "diagnosis_binary"))]){
-    plot(fit, cancer_train, as.formula(paste("radius_se~", name, sep=" ")))
-  }
-}
-
-plotpairs(best_linear_svm)
-```
 
 ### SVM Visualization
 
@@ -282,6 +289,8 @@ plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 
 ### ROC (Linear SVM)
 
+We visualize the ROC curves:
+
 On train data: 
 
 ```{r}
@@ -315,6 +324,8 @@ legend("bottomright", legend = c("Linear", "Radial"),
        col = c("blue", "red"), lty = 1)
 ```
 
+Even though the radial kernel fits the training data more closely due to its higher complexity, the linear kernel performs better on the test data (since the data is likely to be linearly separable as explained above), we decided to select the model with the linear kernel.
+
 ## Model 3: Random Forest
 
 For Random Forest, we decided to use group 'Mean' and group 'Worst' separately. This is because, we want to understand the potential difference in prediction given the different level of severity of the patients' conditions. As we have mentioned in the introduction, 'Worst' measures mean of the three
@@ -326,16 +337,19 @@ First, We select variables by running a preliminary random forest model with all
 rf <- randomForest(diagnosis_binary~.-diagnosis, data=cancer_train, proximity=TRUE)
 importance(rf)
 ```
+
 After testing different variables based on their important, and taking into accounts the collinearity issue we discussed in the EDA section, we decided to select the following variables as the predictors:
 concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_mean, perimeter_mean, concavity_worst, area_se.
 
 We chose mtry=2, because after tuning mtry, we found that mtry=2 has the lowest OOB error.
+
 ```{r}
 set.seed(123)
 rf_predictors <- cancer_train %>% select(concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_mean, perimeter_mean, concavity_worst, area_se)
-mtry <- tuneRF(mix_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
+mtry <- tuneRF(rf_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
                stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE, doBest = TRUE)
 ```
+
 We chose the number of tree to be 500. The number of trees should be chosen carefully, since a high performance of the individual models might lead to overfitting when the number of trees is very high. However, taking 50 trees caused a lower accuracy than taking 500 trees. Therefore, this higher number
 of trees is chosen. 
 
@@ -365,6 +379,7 @@ ggplot(ImpDatamix, aes(x=Var.Names, y= MeanDecreaseGini)) +
     axis.ticks.y = element_blank()
   )
 ```
+
 From the plot we can see that the most important predictors are: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst has high gini coefficient, but perimeter_mean ranks second from the last.
 
 # Conclusion
