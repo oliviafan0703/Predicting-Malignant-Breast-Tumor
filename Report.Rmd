@@ -3,6 +3,8 @@
 title: "Final Project Report"
 author: "Olivia Fan, Alicia Gong"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
+bibliography: references.bib
+link-citations: true
 output:
   pdf_document: default
   html_document:
