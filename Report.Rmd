@@ -31,8 +31,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US (Mayo). Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men (CDC). 
 
-Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Mammography is an effective X-ray imaging technology that detects breast cancer early. Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on clinical parameters. However, diagnosing cancer is challenging even for the most skilled doctors. Since masses are heterogeneous, clinical parameters supply limited information on mammography mass. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
-
+Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Breast carcinoma is one of the most common cancers occurring in the female population world-wide. Mammography is an effective X-ray imaging technology that detects breast cancer early. In clinical oncology, doctors usually perform morphimetric analysis of mammographic images. Nuclear changes occurring during these transformational steps need to be assessed objectively. Hence nuclear morphometry can be used as a diagnostic tool. Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on morphometric parameters. However, diagnosing cancer is challenging even for the most skilled doctors. Since masses are heterogeneous, clinical parameters supply limited information on mammography mass. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
 Cancerous lumps are often confused for blocked milk ducts, breast cysts, and other benign conditions. According to an expansive study conducted by Dartmouth College, the University of Vermont, and the Fred Hutchinson Cancer Research Center, and published in the March 2015 issue of the Journal of American Medical Association, approximately 13% of the diagnoses missed Stage 1 breast cancer. Meanwhile, 48% failed to detect atypia hyperplasia, a precursor to breast cancer. A significant number also over-diagnosed atypia hyperplasia. 
 
 There is, therefore, an urgent need to find new tools that can identify patients with breast cancer. Our study aims to build supervised machine-learning models to predict the diagnosis of breast cancer and understand the most important variables, to assist doctors and radiologists in accurately interpreting mammography imaging. 
@@ -412,10 +411,29 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
+In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. 
+
+Then, we used the predictors selected by LASSO to build a SVM model. 
+
+Finally, we build another Random Forest model to compare with the SVM model. 
+
+Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
+
+Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
+Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
+Nuclear area was the area within the outlined nuclear perimeter.
+Perimeter was measured as the distance around the nuclear border.
+Diameter was the diameter of the circle with the same area as the outlined nucleus.
+Compactness of the cell nuclei calculated using the formula: Perimeter /area.
+
+When the tumor is benign, the patient has what is called as benign prostatic hyperplasia. With hyperplasia, hypercellular smear showing ductal epithelial cells arranged in sheets showing mild variation in size and shape. 
+
+However, when the cancer is malignant, the patient has Carcinoma. We can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
+
 Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
 
 # Citations
-
+Wolberg WH, Street WN, Mangasarian OL. Importance of nuclear morphology in breast cancer prognosis. Clin Cancer Res. 1999;5:3542–8.
 
 # Appendix
 
