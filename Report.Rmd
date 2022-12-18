@@ -88,9 +88,9 @@ The bar plot shows that there is a larger number of benign than malignant cancer
 
 We divide the data into 3 categories according to their features.
 ```{r, echo=F, warning=F}
-features_mean= cancer[2:10]
-features_se= cancer[11:20]
-features_worst= cancer[21:31]
+features_mean= cancer[2:11]
+features_se= cancer[12:21]
+features_worst= cancer[22:31]
 ```
 
 ```{r, echo=F, warning=F, fig.height = 4, fig.width = 4}
@@ -116,7 +116,7 @@ panel.hist <- function(x, ...)
     rect(breaks[-nB], 0, breaks[-1], y, color = "dodgerblue3", ...)
 }
 
-pairs(cancer[2:10], 
+pairs(cancer[2:11], 
              method = "pearson", # correlation method
              digits=3,
              pch = '.',
@@ -129,7 +129,9 @@ pairs(cancer[2:10],
 
 We observe from the pairwise scatterplot matrix above that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `parameter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `parameter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
 
-The distributions of the predictors seem to be all unimodal, with no apparant outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors here:
+We observe that there does not seem to be a separating hyperplane for the two classes for predictors in the relationship between `texture_mean` and `symmetry_mean`, and between `smoothness_mean` and  `fractal_dimension_mean` since the observations in two classes mingle together. This hints at the fact that these predictors might not be helpful for the two class classification problem, which we will filter out in our model through variable selection.
+
+The distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors here:
 
 ```{r, warning = F, echo=F, fig.height = 2, fig.width = 5}
 library(cowplot)
@@ -141,7 +143,7 @@ plot_grid(p1, p2, labels = "AUTO")
 ```
 
 After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
-
+We plot the distribution of the predictors separated by the benigh and malignant classes, and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
 
 ```{r, echo=F, warning=F, fig.height = 15, fig.width = 25}
 source("Functions.R")
@@ -162,7 +164,7 @@ plot_data(df, 'diagnosis')
 
 ## Model 1: LASSO-Penalized Logistic Regression
 
-We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model.
+We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model. As explained in our exploratory data analysis above, we filter out predictors associated with texture, smoothness, fractal dimension and symmetry in our model due to the lack of separation in the values of these predictors for the benign and malignant tumor classes.
 
 ### Hyperparameter Tuning
 
@@ -271,6 +273,7 @@ best_radial_svm <- tune.out$best.model
 summary(best_radial_svm)
 ```
 
+
 ```{r}
 ypred <- predict(best_radial_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
@@ -283,9 +286,10 @@ The misclassification rate is 0.02924, which is similar to that of the linear ke
 
 ### SVM Visualization
 
-#### Linear
+### Linear
 
-```{r, echo=FALSE}
+
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
@@ -296,9 +300,10 @@ plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
 plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
 ```
 
+
 ### Radial
 
-```{r, echo=FALSE}
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se,
                  kernel = "radial", data = cancer_train,
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
@@ -387,7 +392,7 @@ confusionMatrix(pred_mix, cancer_test$diagnosis_binary)
 ```
 The RF model yields a 96% accuracy for the testing set. 
 
-```{r}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
 ImpDatamix <- as.data.frame(importance(rf_mix))
 ImpDatamix$Var.Names <- row.names(ImpDatamix)
 
