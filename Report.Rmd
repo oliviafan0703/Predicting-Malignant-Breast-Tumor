@@ -63,7 +63,7 @@ cancer<-read_csv("data.csv")%>%
 ```
 
 
-In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 and -1:
+In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 (malignant) and -1 (benign):
 
 ```{r, echo=F, warning=F}
 cancer_binary<-cancer%>%
@@ -108,7 +108,7 @@ Major observations:
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
-```{r, echo=F, warning=F, fig.height = 10, fig.width = 10, fig.cap = "Scatterplot of mean predictors in the dataset" }
+```{r, echo=F, warning=F, fig.height = 10, fig.width = 10, fig.cap = "Scatterplot of mean predictors by malignant (red) and benign (blue) tumors" }
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -295,15 +295,14 @@ predicted_results<-cbind(predictors,probabilities)%>%
   rename(probabilities=s0)
 predicted_results<-cbind(predicted_results,predicted.classes)%>%
   rename("predicted_class"=s0)
-predicted_results%>%head(10)%>%kable(digits=3)
+predicted_results%>%head(12)%>%kable(digits=3)
 # Model accuracy
 observed.classes <- cancer_test$diagnosis
 mean(predicted.classes == observed.classes)
 ```
 
-We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
-Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
-Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
+We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `concave_points_mean` of 0.147, `area_se` of 153.400, `compactness_se` of 0.049040, `radius_worst` of 25.380, `concavity_worst` of 0.711900, `concave_points_worst` of 0.26540, `compactness_mean` of 0.27760, `concavity_se` of 0.053730, `concavity_mean` of 0.300100, `radius_mean` of 17.990, `concave_points_se` of 0.712, `area_worst` of 2019.0, `compactness_worst` of 0.66560 is expected to have a 100% of being diagnosed as malignant tumor. On the other hand, a patient with tumor with `concave_points_mean` of 0.031100, `area_se` of 14.670, `compactness_se` of 0.018980, `radius_worst` of 14.500, `concavity_worst` of 0.189000, `concave_points_worst` of 0.07283, `compactness_mean` of 0.12700, `concavity_se` of 0.016980, `concavity_mean` of 0.018980, `radius_mean` of 13.080, `concave_points_se` of 0.006490, `area_worst` of 630.5, `compactness_worst` of 0.27760 is expected to have a 87.47e% of being diagnosed as malignant tumor.A patient with tumor with `concave_points_mean` of 0.055980, `area_se` of 24.910, `compactness_se` of 0.029950, `radius_worst` of 15.890, `concavity_worst` of 0.518600, `concave_points_worst` of 0.14470, `compactness_mean` of 0.10980, `concavity_se` of 0.048150, `concavity_mean` of 0.131900, `radius_mean` of 14.250, `concave_points_se` of 0.011610, `area_worst` of 799.6, `compactness_worst` of 0.42380 is expected to have a 87.47% of being diagnosed as malignant tumor. 
+
 
 ## Model 2: Support Vector Machine
 
@@ -313,10 +312,10 @@ We fitted a linear kernel SVM and a radial kernel SVM to compare the performance
 
 We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model in order to avoid overfitting.
 
-We tune the hyperparameter 
+We tune the hyperparameter cost through cross validation considering a range of values from 0.001 to 100, and selected the optimal cost = 0.1 
 
 ```{r}
-set.seed(321)
+set.seed(876)
 tune.out <- tune(svm, diagnosis_binary ~concave_points_mean+area_se+compactness_se+radius_worst+concavity_worst+concave_points_worst+compactness_mean+compactness_se+concavity_se+concavity_mean+radius_mean+concave_points_se+area_worst+compactness_worst+compactness_mean*concave_points_mean, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
@@ -324,6 +323,8 @@ summary(tune.out)
 best_linear_svm <- tune.out$best.model
 summary(best_linear_svm)
 ```
+
+Then we predicted on our test set and obtained the following truth table:
 
 ```{r, echo=F}
 devtools::install_github("yihui/printr")
@@ -334,10 +335,11 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.02924.
-
+As previously explained, we associate level 1  with malignant tumors and level -1 with benign tumors. According to the truth table, there are 3 test samples with true category malignant predicted as benign, whereas there are 2 test samples with true category benign predicted as malignant. The misclassification rate is 0.02924.
 
 ### Radial Kernel SVM
+
+We tune the hyperparameter cost and gamma through cross validation considering a range of values of cost from 0.001 to 1000, gamma from 0.5 to 4, and selected the optimal cost = 1, gamma = 0.5
 
 ```{r}
 set.seed(5)
@@ -350,6 +352,7 @@ best_radial_svm <- tune.out$best.model
 summary(best_radial_svm)
 ```
 
+Then we predicted on our test set and obtained the following truth table:
 
 ```{r}
 ypred <- predict(best_radial_svm, cancer_test)
@@ -358,13 +361,14 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.02924, which is similar to that of the linear kernel which suggests that the two classes are likely to be linearly separable so that we can find a separating hyperplane using the linear kernel.
+According to the truth table, there are 3 test samples with true category malignant predicted as benign, whereas there are 2 test samples with true category benign predicted as malignant. The misclassification rate is 0.02924 which is equal to that of the linear kernel. This suggests that the two classes are likely to be linearly separable so that we can find a separating hyperplane using the linear kernel, therefore the linear kernel SVM suffices for our particular dataset. 
 
 
 ### SVM Visualization
 
-### Linear
+We visualize the decision boundaries of the linear and radial SVM kernels plotting pairs of predictors, taking `concavity_mean` and `texture_se` as examples:
 
+### Linear
 
 ```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se, data = cancer_train, kernel = "linear",
@@ -373,10 +377,11 @@ tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smo
 best_linear_graph <- tune.out$best.model
 
 plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
-
-plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
 ```
 
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
+plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
+```
 
 ### Radial
 
@@ -388,13 +393,16 @@ tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smo
 best_radial_graph <- tune.out$best.model
 
 plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
+```
+
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
 plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
 
 
-### ROC (Linear SVM)
+### ROC
 
-We visualize the ROC curves:
+We visualize the ROC curves of linear and radial kernel SVMs on test and train data respectively.
 
 On train data: 
 
@@ -429,7 +437,7 @@ legend("bottomright", legend = c("Linear", "Radial"),
        col = c("blue", "red"), lty = 1)
 ```
 
-Even though the radial kernel fits the training data more closely due to its higher complexity, the linear kernel performs better on the test data (since the data is likely to be linearly separable as explained above), we decided to select the model with the linear kernel.
+Even though the radial kernel fits the training data more closely due to its higher complexity, the linear kernel performs better on the test data (since the data is likely to be linearly separable as explained above), we decided to select the model with the linear kernel, which will result in lower variance and similarly low bias according to the ROC curves above.
 
 ## Model 3: Random Forest
 
@@ -519,11 +527,11 @@ Both of the models highlights concave points as the most crucial variable. Conca
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![benign1](pics/IJABMR-3-22-g001.jpeg)
-![benign2](pics/IJABMR-3-22-g002.jpeg)
+![benign1](pics/IJABMR-3-22-g001.jpeg){width=20%, height=20%}
+![benign2](pics/IJABMR-3-22-g002.jpeg){width=20%, height=20%}
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
-![malignant](pics/IJABMR-3-22-g004.jpeg)
+![malignant](pics/IJABMR-3-22-g004.jpeg){width=20%, height=20%}
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia.
 
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%; both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. LASSO has the highest accuracy in prediction. On the other hand, RF models use fewer predictors, but it gives a more intuitive result.
