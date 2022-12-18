@@ -170,7 +170,7 @@ We fitted the LASSO-penalized logistic regression model using the optimal hyperp
 
 ```{r, warning = F, echo=F}
 # Dumy code categorical predictor variables
-x <- model.matrix(diagnosis~.-diagnosis_binary+symmetry_worst*concave_points_mean, cancer_train)[,-1]
+x <- model.matrix(diagnosis~.-diagnosis_binary-texture_mean-smoothness_mean-symmetry_mean-fractal_dimension_mean-texture_se-smoothness_se-symmetry_se-fractal_dimension_se-texture_worst-smoothness_worst-symmetry_worst-symmetry_worst-fractal_dimension_worst+compactness_mean*concave_points_mean, cancer_train)[,-1]
 # Convert the outcome (class) to a numerical variable
 y <- ifelse(cancer_train$diagnosis == "M", 1, 0)
 ```
@@ -198,14 +198,17 @@ df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 
 ### Model Interpretation
 
+```{r}
+
+```
 
 ### Prediction
 
-Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities that a tumor is benigh or malignant given the values of the predictors:
+Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities that a tumor is benign or malignant given the values of the predictors:
 
 ```{r}
 # Make predictions on the test data
-x.test <- model.matrix(diagnosis~.-diagnosis_binary+symmetry_worst*concave_points_mean, cancer_test)[,-1]
+x.test <- model.matrix(diagnosis~.-diagnosis_binary-texture_mean-smoothness_mean-symmetry_mean-fractal_dimension_mean-texture_se-smoothness_se-symmetry_se-fractal_dimension_se-texture_worst-smoothness_worst-symmetry_worst-symmetry_worst-fractal_dimension_worst+compactness_mean*concave_points_mean, cancer_test)[,-1]
 probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
 
@@ -234,8 +237,8 @@ We use the predictors selected by the LASSO penalized logistic regression as pre
 If two predictors have high correlation, we only use one of them:
 
 ```{r}
-set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+concave_points_mean*symmetry_worst, data = cancer_train, kernel = "linear",
+set.seed(321)
+tune.out <- tune(svm, diagnosis_binary ~concave_points_mean+area_se+compactness_se+radius_worst+concavity_worst+concave_points_worst+compactness_mean+compactness_se+concavity_se+concavity_mean+radius_mean+concave_points_se+area_worst+compactness_worst+compactness_mean*concave_points_mean, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
 summary(tune.out)
@@ -252,14 +255,14 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.02923.
+The misclassification rate is 0.02924.
 
 
 ### Radial Kernel SVM
 
 ```{r}
-set.seed(1)
-tune.out <- tune(svm, diagnosis_binary ~ texture_mean+concave_points_mean+radius_se+texture_se+area_se+smoothness_se+compactness_se+fractal_dimension_se+radius_worst+texture_worst+smoothness_worst+concavity_worst+concave_points_worst+symmetry_worst+concave_points_mean*symmetry_worst, data = cancer_train,
+set.seed(5)
+tune.out <- tune(svm, diagnosis_binary ~ concave_points_mean+area_se+compactness_se+radius_worst+concavity_worst+concave_points_worst+compactness_mean+compactness_se+concavity_se+concavity_mean+radius_mean+concave_points_se+area_worst+compactness_worst+compactness_mean*concave_points_mean, data = cancer_train,
                  kernel = "radial",
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
@@ -275,7 +278,7 @@ classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypr
 classification_error
 ```
 
-The misclassification rate is 0.03509, which is greater than that of the linear kernel which suggests that the two classes are likely to be linearly separable so that we can find a separating hyperplane using the linear kernel.
+The misclassification rate is 0.02924, which is similar to that of the linear kernel which suggests that the two classes are likely to be linearly separable so that we can find a separating hyperplane using the linear kernel.
 
 
 ### SVM Visualization
