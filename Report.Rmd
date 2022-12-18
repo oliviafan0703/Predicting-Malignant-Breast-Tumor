@@ -488,7 +488,7 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. 
+The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
@@ -515,7 +515,7 @@ However, when the cancer is malignant carcinoma, we can observe loosely arranged
 
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
-When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%; both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. LASSO has the highest accuracy in prediction. On the other hand, RF models use fewer predictors, but it gives a more intuitive result.
+When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%; both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. LASSO has the highest accuracy in prediction. On the other hand, RF models use fewer predictors, but it gives a more intuitive result. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the linear SVM is:, in a radial SVM is:, and in the RF is: . 
 
 One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
 
