@@ -1,6 +1,6 @@
 
 ---
-title: "Final Project Report"
+title: "Non-invasive Prediction Models for Malignant Breast Tumor"
 author: "Olivia Fan, Alicia Gong"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 bibliography: references.bib
@@ -76,7 +76,8 @@ cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
 ```
 
-# EDA
+# Exploratory Data Analysis 
+
 ```{r, echo=F, warning=F, fig.height = 2, fig.width = 2}
 options(repr.plot.width = 10, repr.plot.height = 5)
 ggplot(data = cancer, mapping = aes(x = diagnosis)) +
@@ -163,7 +164,7 @@ plot_data(df, 'diagnosis')
 
 We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model.
 
-### Model Selection
+### Hyperparameter Tuning
 
 We fitted the LASSO-penalized logistic regression model using the optimal hyperparameter $\lambda= 0.0026830$ via cross validation. To explore the interaction between symmetry and the mean for number of concave portions of the contour, we included the interaction term `symmetry_worst*concave_points_mean`.
 
@@ -191,9 +192,11 @@ df<-as.data.frame(as.matrix(coef(lasso.model)))
 df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 ```
 
-### Model
+### Logistic Model
 
-WRITE MODEL HERE
+
+
+### Model Interpretation
 
 
 ### Prediction
