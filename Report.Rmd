@@ -44,6 +44,8 @@ We obtain the Breast Cancer Wisconsin (Diagnosis) Data Set from Kaggle. The data
 and standard error are computed for each image, resulting in 30 features of
 568 images.
 
+We examined an extensive list of variables in our models, and a full table of them can be found in the appendix.
+
 # Data Processing
 
 The original dataset contains a blank column '...33', so we dropped it. We also dropped the 'id' column, and rename several columns that contains blank space in their names. 
@@ -195,13 +197,7 @@ df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 
 ### Logistic Model
 
-
-
-### Model Interpretation
-
-```{r}
-
-```
+\begin{align} \log(\frac{P}{1-P}) &= -10.4871-0.1130 \times radius\_mean -33.6480 \times compactness\_mean \\&+14.3918 \times concavity\_mean +19.0997 \times concave\_points\_mean \\ &+ 0.0944 \times area\_se -30.3992 \times compactness\_se -31.2549 \times concavity\_se \\ & +34.8557 \times concave\_points\_se +0.0112 \times radius\_worst +0.0049 \times area\_worst \\ &+4.9213 \times  compactness\_worst +7.6360 \times concavity\_worst + 26.8649 \times concave\_points\_worst \\ &+74.5208 \times compactness\_mean \times concave\_points\_mean \end{align}
 
 ### Prediction
 
@@ -214,7 +210,7 @@ probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
 
 #Present the prediction
-predictors<-cancer_test%>%select(texture_mean,concave_points_mean,radius_se,texture_se,area_se,smoothness_se,compactness_se,fractal_dimension_se,radius_worst,texture_worst,smoothness_worst,concavity_worst,concave_points_worst,symmetry_worst)
+predictors<-cancer_test%>%select(concave_points_mean,area_se,compactness_se,radius_worst,concavity_worst,concave_points_worst,compactness_mean,compactness_se,concavity_se,concavity_mean,radius_mean,concave_points_se,area_worst,compactness_worst)
 predicted_results<-cbind(predictors,probabilities)%>%
   rename(probabilities=s0)
 predicted_results<-cbind(predicted_results,predicted.classes)%>%
@@ -228,6 +224,76 @@ mean(predicted.classes == observed.classes)
 We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
 Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
 Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
+
+### Model Interpretation
+
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
+summary(cancer_train$compactness_mean)
+summary(cancer_train$concave_points_mean)
+
+df <- data.frame()
+cancer_test_low = cancer_test%>%select(-compactness_mean,-concave_points_mean)
+duprow=cancer_test_low[1,]
+for(i in 1:150)
+{
+    df = rbind(df,duprow)
+}
+concave_points_mean = seq(0,0.2,length.out=150)
+df$compactness_mean=0.01938
+df <- cbind(df,concave_points_mean)
+df<- df%>%mutate(logit = -10.4871-0.1130*radius_mean-33.6480*compactness_mean+14.3918*concavity_mean+19.0997*concave_points_mean+0.0944*area_se-30.3992*compactness_se -31.2549*concavity_se +34.8557 *concave_points_se +0.0112*radius_worst+0.0049*area_worst+4.9213*compactness_worst+7.6360*concavity_worst + 26.8649*concave_points_worst+74.5208*compactness_mean*concave_points_mean)
+df$compactness_mean_level = "low"
+
+## MEDIUM VALUE OF compactness_mean
+df2 <- data.frame()
+cancer_test_low = cancer_test%>%select(-compactness_mean,-concave_points_mean)
+duprow=cancer_test_low[1,]
+for(i in 1:150)
+{
+    df2 = rbind(df2,duprow)
+}
+concave_points_mean = seq(0,0.2,length.out=150)
+df2$compactness_mean=0.26
+df2 <- cbind(df2,concave_points_mean)
+df2<- df2%>%mutate(logit = -10.4871-0.1130*radius_mean-33.6480*compactness_mean+14.3918*concavity_mean+19.0997*concave_points_mean+0.0944*area_se-30.3992*compactness_se -31.2549*concavity_se +34.8557 *concave_points_se +0.0112*radius_worst+0.0049*area_worst+4.9213*compactness_worst+7.6360*concavity_worst + 26.8649*concave_points_worst+74.5208*compactness_mean*concave_points_mean)
+df2$compactness_mean_level = "medium"
+
+df_combined<-rbind(df,df2)
+
+## HIGH VALUE OF compactness_mean
+df3 <- data.frame()
+cancer_test_low = cancer_test%>%select(-compactness_mean,-concave_points_mean)
+duprow=cancer_test_low[1,]
+for(i in 1:150)
+{
+    df3 = rbind(df3,duprow)
+}
+concave_points_mean = seq(0,0.2,length.out=150)
+df3$compactness_mean=0.28670
+df3 <- cbind(df3,concave_points_mean)
+df3<- df3%>%mutate(logit = -10.4871-0.1130*radius_mean-33.6480*compactness_mean+14.3918*concavity_mean+19.0997*concave_points_mean+0.0944*area_se-30.3992*compactness_se -31.2549*concavity_se +34.8557 *concave_points_se +0.0112*radius_worst+0.0049*area_worst+4.9213*compactness_worst+7.6360*concavity_worst + 26.8649*concave_points_worst+74.5208*compactness_mean*concave_points_mean)
+df3$compactness_mean_level = "high"
+
+df_combined<-rbind(df_combined,df3)
+
+## FUNCTION TO GET THE Probability
+
+get_probability<-function(log_odds){
+  odds=exp(log_odds)
+  odds/(1+odds)
+}
+
+## get probability
+df_combined<-df_combined%>%
+  rowwise()%>%
+  mutate(probability = get_probability(logit))
+
+ggplot(df_combined, aes(x=concave_points_mean, y=probability, color=compactness_mean_level, shape=compactness_mean_level)) +labs(title = "Interaction between concave points mean and compactness mean", x = "Concave Points Mean")+
+  geom_point() + 
+  geom_smooth(method = "glm", 
+    method.args = list(family = "binomial"), 
+    se = FALSE) 
+```
 
 ## Model 2: SVM
 
@@ -433,6 +499,7 @@ However, when the cancer is malignant, the patient has Carcinoma. We can observe
 Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
 
 # Citations
+
 Wolberg WH, Street WN, Mangasarian OL. Importance of nuclear morphology in breast cancer prognosis. Clin Cancer Res. 1999;5:3542–8.
 
 # Appendix
