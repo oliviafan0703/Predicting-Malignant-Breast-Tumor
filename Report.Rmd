@@ -79,7 +79,7 @@ cancer_test<-cancer_binary[-dt,]
 
 # Exploratory Data Analysis 
 
-```{r, echo=F, warning=F, fig.height = 2, fig.width = 2}
+```{r, echo=F, warning=F, fig.height = 2, fig.width = 2, fig.cap = "Distribution of Malignant and Benign Tumors"}
 options(repr.plot.width = 10, repr.plot.height = 5)
 ggplot(data = cancer, mapping = aes(x = diagnosis)) +
   geom_bar()
@@ -94,7 +94,7 @@ features_se= cancer[12:21]
 features_worst= cancer[22:31]
 ```
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 4}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 4, fig.cap = "Correlation between mean predictors in the dataset"}
 library(corrplot)
 corrplot(cor(features_mean))
 ```
@@ -106,7 +106,7 @@ Major observations:
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
-```{r, echo=F, warning=F, fig.height = 10, fig.width = 10}
+```{r, echo=F, warning=F, fig.height = 10, fig.width = 10, fig.cap = "Scatterplot of mean predictors in the dataset" }
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -134,7 +134,7 @@ We observe that there does not seem to be a separating hyperplane for the two cl
 
 The distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors here:
 
-```{r, warning = F, echo=F, fig.height = 2, fig.width = 5}
+```{r, warning = F, echo=F, fig.height = 2, fig.width = 5, fig.cap = "Distribution of concavity mean and concavity point mean"}
 library(cowplot)
 p1<-ggplot(cancer, aes(x=concavity_mean)) + labs(title = "Distribution of concavity mean")+
   geom_histogram()
@@ -146,7 +146,7 @@ plot_grid(p1, p2, labels = "AUTO")
 After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
 We plot the distribution of the predictors separated by the benigh and malignant classes, and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
 
-```{r, echo=F, warning=F, fig.height = 15, fig.width = 25}
+```{r, echo=F, warning=F, fig.height = 15, fig.width = 25, fig.cap = "Distribution of predictors by diagnosis"}
 source("Functions.R")
 # Read data
 df = read.csv('data.csv')
@@ -169,7 +169,7 @@ We decided to use a LASSO-penalized logistic regression model to perform variabl
 
 ### Hyperparameter Tuning
 
-We fitted the LASSO-penalized logistic regression model using the optimal hyperparameter $\lambda= 0.0026830$ via cross validation. To explore the interaction between symmetry and the mean for number of concave portions of the contour, we included the interaction term `symmetry_worst*concave_points_mean`.
+We fitted the LASSO-penalized logistic regression model using the optimal hyperparameter $\lambda= 0.001399$ via cross validation. To explore the interaction between symmetry and the mean for number of concave portions of the contour, we included the interaction term `symmetry_worst*concave_points_mean`.
 
 ```{r, warning = F, echo=F}
 # Dumy code categorical predictor variables
@@ -178,13 +178,15 @@ x <- model.matrix(diagnosis~.-diagnosis_binary-texture_mean-smoothness_mean-symm
 y <- ifelse(cancer_train$diagnosis == "M", 1, 0)
 ```
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 4}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 4, fig.cap = "LASSO parameter tuning"}
 library(glmnet)
 # Find the best lambda using cross-validation
 set.seed(123)
 cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
 plot(cv.lasso)
 ```
+
+We derived the following LASSO-penalized logistic regression model coefficients using the optimal hyperparameter $\lambda= 0.001399$: 
 
 ```{r, warning = F, echo=F}
 cv.lasso$lambda.min
@@ -195,39 +197,17 @@ df<-as.data.frame(as.matrix(coef(lasso.model)))
 df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 ```
 
-### Logistic Model
+### Result: Logistic Model
 
 \begin{align} \log(\frac{P}{1-P}) &= -10.4871-0.1130 \times radius\_mean -33.6480 \times compactness\_mean \\&+14.3918 \times concavity\_mean +19.0997 \times concave\_points\_mean \\ &+ 0.0944 \times area\_se -30.3992 \times compactness\_se -31.2549 \times concavity\_se \\ & +34.8557 \times concave\_points\_se +0.0112 \times radius\_worst +0.0049 \times area\_worst \\ &+4.9213 \times  compactness\_worst +7.6360 \times concavity\_worst + 26.8649 \times concave\_points\_worst \\ &+74.5208 \times compactness\_mean \times concave\_points\_mean \end{align}
 
-### Prediction
-
-Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities that a tumor is benign or malignant given the values of the predictors:
-
-```{r}
-# Make predictions on the test data
-x.test <- model.matrix(diagnosis~.-diagnosis_binary-texture_mean-smoothness_mean-symmetry_mean-fractal_dimension_mean-texture_se-smoothness_se-symmetry_se-fractal_dimension_se-texture_worst-smoothness_worst-symmetry_worst-symmetry_worst-fractal_dimension_worst+compactness_mean*concave_points_mean, cancer_test)[,-1]
-probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
-predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
-
-#Present the prediction
-predictors<-cancer_test%>%select(concave_points_mean,area_se,compactness_se,radius_worst,concavity_worst,concave_points_worst,compactness_mean,compactness_se,concavity_se,concavity_mean,radius_mean,concave_points_se,area_worst,compactness_worst)
-predicted_results<-cbind(predictors,probabilities)%>%
-  rename(probabilities=s0)
-predicted_results<-cbind(predicted_results,predicted.classes)%>%
-  rename("predicted_class"=s0)
-predicted_results%>%head(10)%>%kable(digits=3)
-# Model accuracy
-observed.classes <- cancer_test$diagnosis
-mean(predicted.classes == observed.classes)
-```
-
-We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
-Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
-Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
-
 ### Model Interpretation
 
-```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
+We found that while predictors `concavity_mean`, `concave_points_mean`,`area_se`, `radius_worst`, `concave_points_se`, `area_worst`, `compactness_worst`, `concavity_worst`, `concave_points_worst` and `concavity_se` are positively associated with the response log odds, predictors `radius_mean`, `compactness_se` and `compactness_mean` are negatively associated with the response log odds. Of all the predictors, `concave_points_se` and `compactness_mean` have the largest magnitude, and therefore are the most significant predictors. For each 0.01 additional unit increase in `concave_points_se`, the log odds of the probability that a patient is diagnosed as malignant cancer tends to decrease by 34.85% holding all else constant. On the other hand, for each 0.01 additional unit increase in `concavity_se`, the log odds of the probability that a patient is diagnosed as malignant cancer tends to decrease by 31.2549% holding all else constant. By the interaction term, for each 0.01 additional unit increase in `compactness_mean`, the coefficient of `concave_points_mean` is expected to increase by 0.745208, holding all else constant. 
+
+To further interpret the interaction between `compactness_mean` and `concave_points_mean`, we created the following visualization with different levels of fixed `compactness_mean`, at 0.01938 (low), 0.26 (medium) and 0.28670 (high). To avoid interpolation, we first looked at the quantile summaries of these two predictors. There seems to be significant interactions between `compactness_mean` and `concave_points_mean`, since the effect of `concave_points_mean` on the probability changes drastically on the different levels of the `compactness_mean_level` values. For high and medium values of compactness mean level, as the number of concave points increases, the probability that a patient is diagnosed as malignant cancer also tends to increase, and high values of compactness mean level associates with a stronger effect by the number of concave points on this probability. On the other hand, for low values of compactness mean level, the probability tends to stay at nearly 1 and the number of concave points does not affect the probability by a significant amount. Therefore, through this interaction term, we discover that higher levels of compactness mean associates with a stronger effect that concave points mean has on the response probability.
+
+```{r, echo=F, warning=F, out.height  = '80%', out.width = '80%'}
 summary(cancer_train$compactness_mean)
 summary(cancer_train$concave_points_mean)
 
@@ -295,13 +275,41 @@ ggplot(df_combined, aes(x=concave_points_mean, y=probability, color=compactness_
     se = FALSE) 
 ```
 
-## Model 2: SVM
+### Prediction
+
+Using the logistic regression model, besides classification we also want to understand uncertainty - more specifically, predictive probabilities that a tumor is benign or malignant given the values of the predictors:
+
+```{r}
+# Make predictions on the test data
+x.test <- model.matrix(diagnosis~.-diagnosis_binary-texture_mean-smoothness_mean-symmetry_mean-fractal_dimension_mean-texture_se-smoothness_se-symmetry_se-fractal_dimension_se-texture_worst-smoothness_worst-symmetry_worst-symmetry_worst-fractal_dimension_worst+compactness_mean*concave_points_mean, cancer_test)[,-1]
+probabilities <- lasso.model %>% predict(newx = x.test, type = "response")
+predicted.classes <- ifelse(probabilities > 0.5, "M", "B")
+
+#Present the prediction
+predictors<-cancer_test%>%select(concave_points_mean,area_se,compactness_se,radius_worst,concavity_worst,concave_points_worst,compactness_mean,compactness_se,concavity_se,concavity_mean,radius_mean,concave_points_se,area_worst,compactness_worst)
+predicted_results<-cbind(predictors,probabilities)%>%
+  rename(probabilities=s0)
+predicted_results<-cbind(predicted_results,predicted.classes)%>%
+  rename("predicted_class"=s0)
+predicted_results%>%head(10)%>%kable(digits=3)
+# Model accuracy
+observed.classes <- cancer_test$diagnosis
+mean(predicted.classes == observed.classes)
+```
+
+We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `texture_mean` of 10.38, `concave_points_mean` of 0.147, `radius_se` of 1.095, `texture_se` of 0.905, `area_se` of 153.400, `smoothness_se` of 0.006, `compactness_se` of 0.049, `fractal_dimension_se` of 0.006, `radius_worst` of 25.380, `texture_worst` of 17.33, `smoothness_worst` of 0.162, `concavity_worst` of 0.712, `concave_points_worst` of 0.265, `symmetry_worst` of 0.460 is expected to have a 100% of being diagnosed as malignant tumor. 
+Whereas... is expected to have a 0% of being diagnosed as malignant tumor. 
+Whereas... is expected to have a 87.4% of being diagnosed as malignant tumor. 
+
+## Model 2: Support Vector Machine
+
+We fitted a linear kernel SVM and a radial kernel SVM to compare the performance between the two kernels and select the one that provides the better formance on test data.
 
 ### Linear Kernel SVM
 
-We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model:
+We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model in order to avoid overfitting.
 
-If two predictors have high correlation, we only use one of them:
+We tune the hyperparameter 
 
 ```{r}
 set.seed(321)
@@ -477,26 +485,26 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. Then, we used the predictors selected by LASSO to build a SVM model. Finally, we build another Random Forest model to compare with the SVM model.
+In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. 
 
-The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. 
+Then, we used the predictors selected by LASSO to build a SVM model. 
 
-Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
+Finally, we build another Random Forest model to compare with the SVM model. 
 
+Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
+
+Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
 Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
 Nuclear area was the area within the outlined nuclear perimeter.
 Perimeter was measured as the distance around the nuclear border.
 Diameter was the diameter of the circle with the same area as the outlined nucleus.
-Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area.
+Compactness of the cell nuclei calculated using the formula: Perimeter /area.
 
-When the tumor is benign, the cells shows mild variation in size and shape. 
+When the tumor is benign, the patient has what is called as benign prostatic hyperplasia. With hyperplasia, hypercellular smear showing ductal epithelial cells arranged in sheets showing mild variation in size and shape. 
 
-![benign](pics/IJABMR-3-22-g001.jpeg)
+However, when the cancer is malignant, the patient has Carcinoma. We can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
-However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
-
-![malignant](pics/IJABMR-3-22-g004.jpeg)
-
+Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
 
 # Citations
 
