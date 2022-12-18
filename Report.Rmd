@@ -92,7 +92,7 @@ features_se= cancer[11:20]
 features_worst= cancer[21:31]
 ```
 
-```{r, echo=F, warning=F}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 4}
 library(corrplot)
 corrplot(cor(features_mean))
 ```
@@ -104,7 +104,7 @@ Major observations:
 - Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
-```{r, echo=F, warning=F}
+```{r, echo=F, warning=F, fig.height = 10, fig.width = 10}
 panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -126,9 +126,23 @@ pairs(cancer[2:10],
              )
 ```
 
-We observe from the scatterplot matrix that the two classifications seem to be generally separable, with distinct regions in the scatterplot visualization of the association with the predictors.
+We observe from the pairwise scatterplot matrix above that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `parameter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `parameter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
 
-```{r, echo=F, warning=F, fig.height = 15, fig.width = 20}
+The distributions of the predictors seem to be all unimodal, with no apparant outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors here:
+
+```{r, warning = F, echo=F, fig.height = 2, fig.width = 5}
+library(cowplot)
+p1<-ggplot(cancer, aes(x=concavity_mean)) + labs(title = "Distribution of concavity mean")+
+  geom_histogram()
+p2<-ggplot(cancer, aes(x=concave_points_mean)) + labs(title = "Distribution of concavity point mean")+
+  geom_histogram()
+plot_grid(p1, p2, labels = "AUTO")
+```
+
+After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
+
+
+```{r, echo=F, warning=F, fig.height = 15, fig.width = 25}
 source("Functions.R")
 # Read data
 df = read.csv('data.csv')
@@ -143,8 +157,6 @@ df$diagnosis = factor(df$diagnosis, levels = c('B', 'M'))
 plot_data(df, 'diagnosis')
 ```
 
-After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
-
 # Methodology 
 
 ## Model 1: LASSO-Penalized Logistic Regression
@@ -153,16 +165,16 @@ We decided to use a LASSO-penalized logistic regression model to perform variabl
 
 ### Model Selection
 
-We included the interaction term `symmetry_worst*concave_points_mean` to explore the interaction between symmetery and the mean for number of concave portions of the contour.
+We fitted the LASSO-penalized logistic regression model using the optimal hyperparameter $\lambda= 0.0026830$ via cross validation. To explore the interaction between symmetry and the mean for number of concave portions of the contour, we included the interaction term `symmetry_worst*concave_points_mean`.
 
-```{r}
+```{r, warning = F, echo=F}
 # Dumy code categorical predictor variables
 x <- model.matrix(diagnosis~.-diagnosis_binary+symmetry_worst*concave_points_mean, cancer_train)[,-1]
 # Convert the outcome (class) to a numerical variable
 y <- ifelse(cancer_train$diagnosis == "M", 1, 0)
 ```
 
-```{r}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 4}
 library(glmnet)
 # Find the best lambda using cross-validation
 set.seed(123)
@@ -170,13 +182,18 @@ cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
 plot(cv.lasso)
 ```
 
-```{r}
+```{r, warning = F, echo=F}
 cv.lasso$lambda.min
 # Final model with lambda.min
 lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
                       lambda = cv.lasso$lambda.min)
-coef(lasso.model)
+df<-as.data.frame(as.matrix(coef(lasso.model)))
+df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 ```
+
+### Model
+
+WRITE MODEL HERE
 
 
 ### Prediction
@@ -225,7 +242,8 @@ summary(best_linear_svm)
 
 ```{r}
 ypred <- predict(best_linear_svm, cancer_test)
-table(predict = ypred, truth = cancer_test$diagnosis_binary)
+table(predict = ypred, truth = cancer_test$diagnosis_binary)%>%
+  kable()
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 classification_error
 ```
@@ -265,9 +283,7 @@ tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smo
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
 best_linear_graph <- tune.out$best.model
-```
 
-```{r}
 plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
 
 plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
@@ -281,9 +297,7 @@ tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smo
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
                                gamma = c(0.5, 1, 2, 3, 4)))
 best_radial_graph <- tune.out$best.model
-```
 
-```{r}
 plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
 plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
@@ -295,7 +309,7 @@ We visualize the ROC curves:
 
 On train data: 
 
-```{r}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
 library(pROC)
 fitted <- attributes(predict(best_linear_svm, cancer_train,
                              decision.values=TRUE))$decision.values
@@ -312,7 +326,7 @@ legend("bottomright", legend = c("Linear", "Radial"),
 
 On test data: 
 
-```{r}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
 fitted <- attributes(predict(best_linear_svm, cancer_test,
                              decision.values=TRUE))$decision.values
 ROC_svm1 <- roc(cancer_test$diagnosis_binary, fitted)
@@ -384,7 +398,9 @@ ggplot(ImpDatamix, aes(x=Var.Names, y= MeanDecreaseGini)) +
 
 From the plot we can see that the most important predictors are: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst has high gini coefficient, but perimeter_mean ranks second from the last.
 
-# Conclusion
+# Conclusion & Future Work
 
 Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
+
+# Citations
 
