@@ -31,12 +31,14 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US (Mayo). Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men (CDC). 
 
-Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Breast carcinoma is one of the most common cancers occurring in the female population world-wide. Mammography is an effective X-ray imaging technology that detects breast cancer early. In clinical oncology, doctors usually perform morphimetric analysis of mammographic images. Nuclear changes occurring during these transformational steps need to be assessed objectively. Hence nuclear morphometry can be used as a diagnostic tool. Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on morphometric parameters. However, diagnosing cancer is challenging even for the most skilled doctors. Since masses are heterogeneous, clinical parameters supply limited information on mammography mass. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
-Cancerous lumps are often confused for blocked milk ducts, breast cysts, and other benign conditions. According to an expansive study conducted by Dartmouth College, the University of Vermont, and the Fred Hutchinson Cancer Research Center, and published in the March 2015 issue of the Journal of American Medical Association, approximately 13% of the diagnoses missed Stage 1 breast cancer. Meanwhile, 48% failed to detect atypia hyperplasia, a precursor to breast cancer. A significant number also over-diagnosed atypia hyperplasia. 
+Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Breast carcinoma is one of the most common cancers occurring in the female population world-wide. Mammography is an effective X-ray imaging technology that detects breast cancer early. In clinical oncology, doctors usually perform morphimetric analysis of mammographic images. Nuclear changes occurring during these transformational steps need to be assessed objectively. Variations in nuclear structure are the morphologic hallmark of cancer diagnosis. There is a gradual shift in the nuclear parameters as the disease progresses from benign to malignant.
+Nuclear size, shape, chromatin pattern, and nucleoli size and a number have all been reported to change in breast cancer.These nuclear morphometric features have been shown to predict the prognosis of the breast cancer patients.
+Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on morphometric parameters. However, diagnosing cancer is challenging even for the most skilled doctors. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
+According to an expansive study conducted by Dartmouth College, the University of Vermont, and the Fred Hutchinson Cancer Research Center, and published in the March 2015 issue of the Journal of American Medical Association, approximately 13% of the diagnoses missed Stage 1 breast cancer. Meanwhile, 48% failed to detect atypia hyperplasia, a precursor to breast cancer. A significant number also over-diagnosed atypia hyperplasia. 
 
 There is, therefore, an urgent need to find new tools that can identify patients with breast cancer. Our study aims to build supervised machine-learning models to predict the diagnosis of breast cancer and understand the most important variables, to assist doctors and radiologists in accurately interpreting mammography imaging. 
 
-We built 3 models in total: Lasso penalized logistic regression, SVM, and Random Forest.
+We built 3 models in total: Lasso penalized logistic regression, SVM, and Random Forest. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. Then, we used the predictors selected by LASSO to build a SVM model. Finally, we build another Random Forest model as a comparison to the SVM model, also for a more straightforward interpretation.
 
 # Data
 
@@ -165,7 +167,9 @@ plot_data(df, 'diagnosis')
 
 ## Model 1: LASSO-Penalized Logistic Regression
 
-We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model. As explained in our exploratory data analysis above, we filter out predictors associated with texture, smoothness, fractal dimension and symmetry in our model due to the lack of separation in the values of these predictors for the benign and malignant tumor classes.
+We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model. Also because LASSO is a great tool dealing with multicollinearity issue. Since our EDA shows that many of the input variables are correlated, LASSO will drop the highly correlated features.
+
+As explained in our exploratory data analysis above, we filter out predictors associated with texture, smoothness, fractal dimension and symmetry in our model due to the lack of separation in the values of these predictors for the benign and malignant tumor classes.
 
 ### Hyperparameter Tuning
 
@@ -429,8 +433,7 @@ Even though the radial kernel fits the training data more closely due to its hig
 
 ## Model 3: Random Forest
 
-For Random Forest, we decided to use group 'Mean' and group 'Worst' separately. This is because, we want to understand the potential difference in prediction given the different level of severity of the patients' conditions. As we have mentioned in the introduction, 'Worst' measures mean of the three
-largest values. By building a model with only 'Mean' and 'Worst' variables, we think we can better understand the extreme cases. 
+Now, we are going to build a Random Forest model to compare with Lasso and SVM. We chose Random Forest because it uses bootstrap sampling and feature sampling, so it is not affected by multicollinearity that much since it is picking different set of features for different models and of course every model sees a different set of data points. What's more, it is easy and straightforward to interpret a tree model, so it can help us understanding the importance of the variables than LASSO.
 
 First, We select variables by running a preliminary random forest model with all the variables, to rank their importance. 
 
@@ -505,6 +508,27 @@ When the tumor is benign, the patient has what is called as benign prostatic hyp
 However, when the cancer is malignant, the patient has Carcinoma. We can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
 Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
+
+Concave points counted the number of concave portions of the contour of the cell nucleus.
+Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
+Nuclear area was the area within the outlined nuclear perimeter.
+Perimeter was measured as the distance around the nuclear border.
+Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area. 
+
+Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
+
+The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
+
+![benign1](pics/IJABMR-3-22-g001.jpeg)
+![benign2](pics/IJABMR-3-22-g002.jpeg)
+However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
+
+![malignant](pics/IJABMR-3-22-g004.jpeg)
+Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia.
+
+When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%; both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. LASSO has the highest accuracy in prediction. On the other hand, RF models use fewer predictors, but it gives a more intuitive result.
+
+One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
 
 # Citations
 
