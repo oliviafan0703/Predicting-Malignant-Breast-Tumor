@@ -498,22 +498,7 @@ From the plot we can see that the most important predictors are: concave_points_
 
 The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
 
-Then, we used the predictors selected by LASSO to build a SVM model. 
-
-Finally, we build another Random Forest model to compare with the SVM model. 
-
-Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
-
-Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
-
-Concave points counted the number of concave portions of the contour of the cell nucleus.
-Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
-Nuclear area was the area within the outlined nuclear perimeter.
-Perimeter was measured as the distance around the nuclear border.
-Diameter was the diameter of the circle with the same area as the outlined nucleus.
-Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area.
-Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area. 
 
 When the tumor is benign, the cells shows mild variation in size and shape. 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
@@ -540,3 +525,25 @@ Wolberg WH, Street WN, Mangasarian OL. Importance of nuclear morphology in breas
 
 # Appendix
 
+| Variable Name            | Description                                                                                                                               |
+|------------------|------------------------------------------------------|
+| diagnosis       | The diagnosis of breast tissues (M = malignant, B = benign)
+                               |
+| radius_mean | mean of distances from center to points on the perimeter
+ |
+| texture_mean | standard deviation of gray-scale values                                        |
+| perimeter_mean  | mean size of the core tumor
+                                     |
+| area_mean         | placeholder                                    |
+| smoothness_mean         | mean of local variation in radius lengths
+                                  |
+| compactness_mean          | mean of perimeter^2 / area - 1.0
+                                                                                    |
+| concavity_mean        | mean of severity of concave portions of the contour
+                                                                                  |
+| concave points_mean          | mean for number of concave portions of the contour
+                                                                                   |
+| symmetry_mean          | placeholder
+                                                                                   |
+| fractal_dimension_mean          | mean for "coastline approximation" - 1
+                                                                                   |
