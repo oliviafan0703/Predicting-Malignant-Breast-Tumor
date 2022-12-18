@@ -240,10 +240,11 @@ best_linear_svm <- tune.out$best.model
 summary(best_linear_svm)
 ```
 
-```{r}
+```{r, echo=F}
+devtools::install_github("yihui/printr")
+require(printr)
 ypred <- predict(best_linear_svm, cancer_test)
-table(predict = ypred, truth = cancer_test$diagnosis_binary)%>%
-  kable()
+table(predict = ypred, truth = cancer_test$diagnosis_binary)
 classification_error <- 1- sum(ypred == cancer_test$diagnosis_binary)/length(ypred)
 classification_error
 ```
@@ -403,4 +404,7 @@ From the plot we can see that the most important predictors are: concave_points_
 Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
 
 # Citations
+
+
+# Appendix
 
