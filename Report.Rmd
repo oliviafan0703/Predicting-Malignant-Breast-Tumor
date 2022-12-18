@@ -498,13 +498,6 @@ From the plot we can see that the most important predictors are: concave_points_
 
 The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
 
-Then, we used the predictors selected by LASSO to build a SVM model. 
-
-Finally, we build another Random Forest model to compare with the SVM model. 
-
-Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
-
-Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
 Concave points counted the number of concave portions of the contour of the cell nucleus.
@@ -520,11 +513,13 @@ Both of the models highlights concave points as the most crucial variable. Conca
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![benign1](pics/IJABMR-3-22-g001.jpeg){width=20%, height=20%}
-![benign2](pics/IJABMR-3-22-g002.jpeg){width=20%, height=20%}
+![benign1](pics/IJABMR-3-22-g001.jpeg)
+
+![benign2](pics/IJABMR-3-22-g002.jpeg)
+
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
-![malignant](pics/IJABMR-3-22-g004.jpeg){width=20%, height=20%}
+![malignant](pics/IJABMR-3-22-g004.jpeg)
 
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
