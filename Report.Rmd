@@ -477,26 +477,26 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. 
+In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. Then, we used the predictors selected by LASSO to build a SVM model. Finally, we build another Random Forest model to compare with the SVM model.
 
-Then, we used the predictors selected by LASSO to build a SVM model. 
+The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. 
 
-Finally, we build another Random Forest model to compare with the SVM model. 
+Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
-Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
-
-Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
 Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
 Nuclear area was the area within the outlined nuclear perimeter.
 Perimeter was measured as the distance around the nuclear border.
 Diameter was the diameter of the circle with the same area as the outlined nucleus.
-Compactness of the cell nuclei calculated using the formula: Perimeter /area.
+Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area.
 
-When the tumor is benign, the patient has what is called as benign prostatic hyperplasia. With hyperplasia, hypercellular smear showing ductal epithelial cells arranged in sheets showing mild variation in size and shape. 
+When the tumor is benign, the cells shows mild variation in size and shape. 
 
-However, when the cancer is malignant, the patient has Carcinoma. We can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
+![benign](pics/IJABMR-3-22-g001.jpeg)
 
-Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
+However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
+
+![malignant](pics/IJABMR-3-22-g004.jpeg)
+
 
 # Citations
 
