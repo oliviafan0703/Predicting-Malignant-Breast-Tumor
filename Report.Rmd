@@ -488,49 +488,40 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-In this study, we build three models. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. 
+The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. 
 
-Then, we used the predictors selected by LASSO to build a SVM model. 
-
-Finally, we build another Random Forest model to compare with the SVM model. 
-
-Both LASSO and RF gives that the following variables are most important in classifying breast cancer: concave_points_worst, concave_points_mean, area_worst, perimeter_worst, and radius_worst. Interestingly, perimeter_worst.
-
-Concave points counted the number of points on the nuclear border that lie on an indentation. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more 
-Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
-Nuclear area was the area within the outlined nuclear perimeter.
-Perimeter was measured as the distance around the nuclear border.
-Diameter was the diameter of the circle with the same area as the outlined nucleus.
-Compactness of the cell nuclei calculated using the formula: Perimeter /area.
-
-When the tumor is benign, the patient has what is called as benign prostatic hyperplasia. With hyperplasia, hypercellular smear showing ductal epithelial cells arranged in sheets showing mild variation in size and shape. 
-
-However, when the cancer is malignant, the patient has Carcinoma. We can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
-
-Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points id the number of concave portions of the contour of the cell nucleus.
+Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
 Concave points counted the number of concave portions of the contour of the cell nucleus.
 Radius computed by averaging the length of radial line segments from the center of the nuclear mass to each of the points of the nuclear border.
 Nuclear area was the area within the outlined nuclear perimeter.
 Perimeter was measured as the distance around the nuclear border.
+Diameter was the diameter of the circle with the same area as the outlined nucleus.
+Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area.
 Compactness of the cell nuclei calculated using the formula: Perimeter^2 /area. 
 
+When the tumor is benign, the cells shows mild variation in size and shape. 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
 ![benign1](pics/IJABMR-3-22-g001.jpeg)
+
 ![benign2](pics/IJABMR-3-22-g002.jpeg)
+
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
 ![malignant](pics/IJABMR-3-22-g004.jpeg)
-Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia.
+
+Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%; both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. LASSO has the highest accuracy in prediction. On the other hand, RF models use fewer predictors, but it gives a more intuitive result.
 
 One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
 
 # Citations
+
+Narasimha A, Vasavi B, Kumar HM. Significance of nuclear morphometry in benign and malignant breast aspirates. Int J Appl Basic Med Res. 2013 Jan;3(1):22-6. doi: 10.4103/2229-516X.112237. PMID: 23776836; PMCID: PMC3678677.
 
 Wolberg WH, Street WN, Mangasarian OL. Importance of nuclear morphology in breast cancer prognosis. Clin Cancer Res. 1999;5:3542–8.
 
