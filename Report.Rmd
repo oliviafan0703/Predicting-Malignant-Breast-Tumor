@@ -505,11 +505,13 @@ Both of the models highlights concave points as the most crucial variable. Conca
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![benign1](pics/IJABMR-3-22-g001.jpeg){width=20%, height=20%}
-![benign2](pics/IJABMR-3-22-g002.jpeg){width=20%, height=20%}
+![benign1](pics/IJABMR-3-22-g001.jpeg)
+
+![benign2](pics/IJABMR-3-22-g002.jpeg)
+
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
 
-![malignant](pics/IJABMR-3-22-g004.jpeg){width=20%, height=20%}
+![malignant](pics/IJABMR-3-22-g004.jpeg)
 
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
