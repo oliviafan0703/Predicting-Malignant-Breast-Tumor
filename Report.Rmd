@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 # Introduction
 
-Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US (Mayo). Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men (CDC). 
+Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US. Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men. 
 
 Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Breast carcinoma is one of the most common cancers occurring in the female population world-wide. Mammography is an effective X-ray imaging technology that detects breast cancer early. In clinical oncology, doctors usually perform morphimetric analysis of mammographic images. Nuclear changes occurring during these transformational steps need to be assessed objectively. Variations in nuclear structure are the morphologic hallmark of cancer diagnosis. There is a gradual shift in the nuclear parameters as the disease progresses from benign to malignant.
 Nuclear size, shape, chromatin pattern, and nucleoli size and a number have all been reported to change in breast cancer. These nuclear morphometric features have been shown to predict the prognosis of the breast cancer patients.
@@ -162,6 +162,8 @@ df$diagnosis = factor(df$diagnosis, levels = c('B', 'M'))
 # options(repr.plot.width = 20, repr.plot.height = 15)
 plot_data(df, 'diagnosis')
 ```
+
+\newpage
 
 # Methodology 
 
@@ -316,6 +318,7 @@ mean(predicted.classes == observed.classes)
 
 We achieved a prediction accuracy of 0.9883. To interpret the predictions, we see that a patient with tumor with `concave_points_mean` of 0.147, `area_se` of 153.400, `compactness_se` of 0.049040, `radius_worst` of 25.380, `concavity_worst` of 0.711900, `concave_points_worst` of 0.26540, `compactness_mean` of 0.27760, `concavity_se` of 0.053730, `concavity_mean` of 0.300100, `radius_mean` of 17.990, `concave_points_se` of 0.712, `area_worst` of 2019.0, `compactness_worst` of 0.66560 is expected to have a 100% of being diagnosed as malignant tumor. On the other hand, a patient with tumor with `concave_points_mean` of 0.031100, `area_se` of 14.670, `compactness_se` of 0.018980, `radius_worst` of 14.500, `concavity_worst` of 0.189000, `concave_points_worst` of 0.07283, `compactness_mean` of 0.12700, `concavity_se` of 0.016980, `concavity_mean` of 0.018980, `radius_mean` of 13.080, `concave_points_se` of 0.006490, `area_worst` of 630.5, `compactness_worst` of 0.27760 is expected to have a 87.47e% of being diagnosed as malignant tumor.A patient with tumor with `concave_points_mean` of 0.055980, `area_se` of 24.910, `compactness_se` of 0.029950, `radius_worst` of 15.890, `concavity_worst` of 0.518600, `concave_points_worst` of 0.14470, `compactness_mean` of 0.10980, `concavity_se` of 0.048150, `concavity_mean` of 0.131900, `radius_mean` of 14.250, `concave_points_se` of 0.011610, `area_worst` of 799.6, `compactness_worst` of 0.42380 is expected to have a 87.47% of being diagnosed as malignant tumor. 
 
+\newpage
 
 ## Model 2: Support Vector Machine
 
@@ -383,7 +386,7 @@ We visualize the decision boundaries of the linear and radial SVM kernels plotti
 
 ### Linear
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.6, fig.width = 4.6}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se, data = cancer_train, kernel = "linear",
                  ranges = list(cost = c(0.001, 0.01, 0.1,
                                         1, 5, 10, 100)))
@@ -392,13 +395,13 @@ best_linear_graph <- tune.out$best.model
 plot(best_linear_graph, cancer_train, radius_se~concavity_mean)
 ```
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.6, fig.width = 4.6}
 plot(best_linear_graph, cancer_train, texture_se~concavity_mean)
 ```
 
 ### Radial
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.6, fig.width = 4.6}
 tune.out <- tune(svm, diagnosis_binary ~ concavity_mean+radius_se+texture_se+smoothness_se,
                  kernel = "radial", data = cancer_train,
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
@@ -408,10 +411,11 @@ best_radial_graph <- tune.out$best.model
 plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
 ```
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.6, fig.width = 4.6}
 plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
 
+\newpage
 
 ### ROC
 
@@ -419,7 +423,7 @@ We visualize the ROC curves of linear and radial kernel SVMs on test and train d
 
 On train data: 
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.5, fig.width = 4.6}
 library(pROC)
 fitted <- attributes(predict(best_linear_svm, cancer_train,
                              decision.values=TRUE))$decision.values
@@ -436,7 +440,7 @@ legend("bottomright", legend = c("Linear", "Radial"),
 
 On test data: 
 
-```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
+```{r, echo=F, warning=F, fig.height = 3.5, fig.width = 4.6}
 fitted <- attributes(predict(best_linear_svm, cancer_test,
                              decision.values=TRUE))$decision.values
 ROC_svm1 <- roc(cancer_test$diagnosis_binary, fitted)
@@ -451,6 +455,7 @@ legend("bottomright", legend = c("Linear", "Radial"),
 ```
 
 Even though the radial kernel fits the training data more closely due to its higher complexity, the linear kernel performs better on the test data (since the data is likely to be linearly separable as explained above), we decided to select the model with the linear kernel, which will result in lower variance and similarly low bias according to the ROC curves above.
+\newpage
 
 ## Model 3: Random Forest
 
@@ -527,6 +532,7 @@ The following two pictures shows the cytological features for benigh Fibroadenom
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus. We can see from the picture that the cell nucleus is clearly deformed and almost bursting, which confirmed our interpretation to the interaction term. 
 
 ![Malignant Tumor](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
+
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%. Both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the both the linear and radial SVM is: 0.041, and in the RF is: 0.068. Therefore, we decided that SVM is a better classification model than RF in this case. 
 
 One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
