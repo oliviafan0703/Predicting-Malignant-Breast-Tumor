@@ -130,7 +130,7 @@ pairs(cancer[2:11],
              )
 ```
 
-Furthermore, we observe from the pairwise scatterplot matrix (Figure 3) that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `parameter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `parameter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
+Furthermore, we observe from the pairwise scatterplot matrix (Figure 3) that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `perimeter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `perimeter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
 
 We observe that there does not seem to be a separating hyperplane for the two classes for predictors in the relationship between `texture_mean` and `symmetry_mean`, and between `smoothness_mean` and  `fractal_dimension_mean` since the observations in two classes mingle together. This hints at the fact that these predictors might not be helpful for the two class classification problem, which we will filter out in our model through variable selection.
 
@@ -146,7 +146,7 @@ plot_grid(p1, p2, labels = "AUTO")
 ```
 
 After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
-We plot the distribution of the predictors separated by the benigh and malignant classes, and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
+We plot the distribution of the predictors separated by the benign and malignant classes, and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
 
 ```{r, echo=F, warning=F, fig.height = 15, fig.width = 25, fig.cap = "Distribution of predictors by diagnosis"}
 source("Functions.R")
@@ -523,7 +523,7 @@ What's more, it is worth-noticing that our LASSO Penalized Logistic model has a 
 
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
-The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
+The following two pictures shows the cytological features for benign Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
 ![Benign (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
 
