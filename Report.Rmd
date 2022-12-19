@@ -514,7 +514,9 @@ The result of the LASSO model shows that radius, compactness, concavity, and con
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
 When the tumor is benign, the cells shows mild variation in size and shape. 
-Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
+Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. What's more, it is worth noticing that our LASSO Penalized Logistic model has a strong interaction term `compactness_mean:concave_points_mean`, which suggests that there is a strong positive relationship between compactness and concave points. This means that as the number of concave points grows, the value of perimeter^2/area also increases, which means that the cell nucleus is deformed, swelled and expanded.
+
+Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
@@ -522,21 +524,26 @@ The following two pictures shows the cytological features for benigh Fibroadenom
 
 ![Benign Tumor (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
 
-However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus.
+However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus. We can see from the picture that the cell nucleus is clearly deformed and almost bursting, which confirmed our interpretation to the interaction term. 
 
 ![Malignant Tumor](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
-
-Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
-
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%. Both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the both the linear and radial SVM is: 0.041, and in the RF is: 0.068. Therefore, we decided that SVM is a better classification model than RF in this case. 
 
 One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
 
+\newpage
+
 # Citations
+
+Centers for Disease Control and Prevention. (2022, September 26). Breast cancer. Centers for Disease Control and Prevention. https://www.cdc.gov/cancer/breast/index.htm 
+
+Mayo Foundation for Medical Education and Research. (2022, December 14). Breast cancer. Mayo Clinic. https://www.mayoclinic.org/diseases-conditions/breast-cancer/symptoms-causes/syc-20352470 
 
 Narasimha A, Vasavi B, Kumar HM. Significance of nuclear morphometry in benign and malignant breast aspirates. Int J Appl Basic Med Res. 2013 Jan;3(1):22-6. doi: 10.4103/2229-516X.112237. PMID: 23776836; PMCID: PMC3678677.
 
 Wolberg WH, Street WN, Mangasarian OL. Importance of nuclear morphology in breast cancer prognosis. Clin Cancer Res. 1999;5:3542–8.
+
+\newpage
 
 # Appendix
 
