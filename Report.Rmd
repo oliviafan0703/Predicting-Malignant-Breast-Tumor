@@ -460,7 +460,7 @@ Even though the radial kernel fits the training data more closely due to its hig
 
 ## Model 3: Random Forest
 
-Now, we are going to build a Random Forest model to compare with Lasso and SVM. We chose Random Forest because it uses bootstrap sampling and feature sampling, so it is not affected by multicollinearity that much since it is picking different set of features for different models and of course every model sees a different set of data points. What's more, it is easy and straightforward to interpret a tree model, so it can help us understanding the importance of the variables than LASSO.
+Now, we are going to build a Random Forest model to compare with Lasso and SVM. We chose Random Forest because it uses bootstrap sampling and feature sampling, so it is not affected by multicollinearity that much since it is picking different set of features for different models and of course every model sees a different set of data points. What's more, it is easy and straightforward to interpret a tree model, so it can help us understanding the importance of the variables than the LASSO Penalized Logistic model.
 
 First, We select variables by running a preliminary random forest model with all the variables, to rank their importance. 
 
@@ -515,28 +515,27 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
+The result of the LASSO Penalized Logistic model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. The difference between two results is not a concern here due to the collinearity among predictors. We can conclude that concave points, nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
 
-Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
+Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. Moreover, the odds of malignant diagonosis increases as perimeter, area, radius increases.  
 
-When the tumor is benign, the cells shows mild variation in size and shape. 
-Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. What's more, it is worth noticing that our LASSO Penalized Logistic model has a strong interaction term `compactness_mean:concave_points_mean`, which suggests that there is a strong positive relationship between compactness and concave points. This means that as the number of concave points grows, the value of perimeter^2/area also increases, which means that the cell nucleus is deformed, swelled and expanded.
+What's more, it is worth-noticing that our LASSO Penalized Logistic model has a strong interaction term `compactness_mean:concave_points_mean`, which suggests that there is a strong positive relationship between compactness and concave points. This means that as the number of concave points grows, the value of perimeter^2/area also increases, which means that the cell nucleus is deformed, swelled and expanded.
 
 Our results is correspondent with the clinical evidence. The ductal carcinoma cells showed higher values for nuclear area, perimeter, diameter, compactness, and concave points when compared to fibroadenomas, fibrocystic disease, and hyperplasia. In the present study, the size related parameters (area, perimeter, diameter, concave points and compactness) of the nucleus were appropriate parameters to differentiate between benign lesions and infiltrative ductal carcinoma of the breast. These parameters showed significant differences between the benign breast lesions and carcinoma.
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![Benign Tumor (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
+![Benign (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
 
-![Benign Tumor (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
+![Benign (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
 
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus. We can see from the picture that the cell nucleus is clearly deformed and almost bursting, which confirmed our interpretation to the interaction term. 
 
-![Malignant Tumor](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
+![Malignant](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
 
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%. Both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the both the linear and radial SVM is: 0.041, and in the RF is: 0.068. Therefore, we decided that SVM is a better classification model than RF in this case. 
 
-One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
+One limitation of our study is that although there are 30 variables, there are only 3 categories (mean, se, worst), and many of them are highly correlated. Also, the data is only collected in Wisconsin so we are should not be interpreting the results as universal. In future works, it would be interesting to see if other exogenous variables such as the patients' age, sex, and health conditions have potential effects in the accuracy of breast cancer diagnosis. 
 
 \newpage
 
