@@ -32,13 +32,13 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 Breast cancer is the most common cancer worldwide and the most common cancer diagnosed in the US (Mayo). Each year in the US, about 264,000 cases of breast cancer are diagnosed in women and about 2,400 in men (CDC). 
 
 Early diagnosis of the condition is crucial to improve the survival rate and relieve suffering in patients. Breast carcinoma is one of the most common cancers occurring in the female population world-wide. Mammography is an effective X-ray imaging technology that detects breast cancer early. In clinical oncology, doctors usually perform morphimetric analysis of mammographic images. Nuclear changes occurring during these transformational steps need to be assessed objectively. Variations in nuclear structure are the morphologic hallmark of cancer diagnosis. There is a gradual shift in the nuclear parameters as the disease progresses from benign to malignant.
-Nuclear size, shape, chromatin pattern, and nucleoli size and a number have all been reported to change in breast cancer.These nuclear morphometric features have been shown to predict the prognosis of the breast cancer patients.
+Nuclear size, shape, chromatin pattern, and nucleoli size and a number have all been reported to change in breast cancer. These nuclear morphometric features have been shown to predict the prognosis of the breast cancer patients.
 Classically, benign or malignant breast tumors are diagnosed by radiologists' interpretation of mammograms based on morphometric parameters. However, diagnosing cancer is challenging even for the most skilled doctors. The symptoms are often shared with diseases and conditions that are unrelated to cancer, leading doctors to improperly diagnose the disease. 
 According to an expansive study conducted by Dartmouth College, the University of Vermont, and the Fred Hutchinson Cancer Research Center, and published in the March 2015 issue of the Journal of American Medical Association, approximately 13% of the diagnoses missed Stage 1 breast cancer. Meanwhile, 48% failed to detect atypia hyperplasia, a precursor to breast cancer. A significant number also over-diagnosed atypia hyperplasia. 
 
-There is, therefore, an urgent need to find new tools that can identify patients with breast cancer. Our study aims to build supervised machine-learning models to predict the diagnosis of breast cancer and understand the most important variables, to assist doctors and radiologists in accurately interpreting mammography imaging. 
+There is, therefore, an urgent need to find new tools that can identify patients with breast cancer. Our study aims to build supervised machine-learning models to predict the diagnosis of breast cancer in a non-invasive framework and understand the most important variables, to assist doctors and radiologists in accurately interpreting mammography imaging. 
 
-We built 3 models in total: Lasso penalized logistic regression, SVM, and Random Forest. First, we used LASSO penalized logistic regression to select variables and to predict the probabilities. Then, we used the predictors selected by LASSO to build a SVM model. Finally, we build another Random Forest model as a comparison to the SVM model, also for a more straightforward interpretation.
+We built 3 models in total: Lasso-penalized logistic regression, SVM, and Random Forest. First, we used Lasso-penalized logistic regression to select variables and to predict the probabilities. Then, we used the predictors selected by LASSO to build a SVM model. Finally, we build another Random Forest model as a comparison to the SVM model, also for a more straightforward interpretation.
 
 # Data
 
@@ -48,9 +48,9 @@ and standard error are computed for each image, resulting in 30 features of
 
 We examined an extensive list of variables in our models, and a full table of them can be found in the appendix.
 
-# Data Processing
+## Data Processing
 
-The original dataset contains a blank column '...33', so we dropped it. We also dropped the 'id' column, and rename several columns that contains blank space in their names. 
+The original dataset contains a blank column `...33`, so we dropped it. We also dropped the `id` column, and rename several columns, `concave points_mean`, `concave points_worst` and `concave points_se` that contains blank space in their names. 
 
 ```{r load-data, message = FALSE, echo=F}
 cancer<-read_csv("data.csv")%>%
@@ -63,14 +63,14 @@ cancer<-read_csv("data.csv")%>%
 ```
 
 
-In order to fit SVM on the data, we encode the `diagnosis` variable into a factor variable with level 1 (malignant) and -1 (benign):
+In order to fit the SVM on the data, we processed the data to encode the `diagnosis` variable into a factor variable with level 1 associating with malignant tumor and -1 associating with benign tumor.
 
 ```{r, echo=F, warning=F}
 cancer_binary<-cancer%>%
   mutate(diagnosis_binary=as.factor(ifelse(diagnosis=="M",1,-1)))
 ```
 
-We partition the data into training and testing sets using a 70-30 percentage split(70% of the original data as the training set, and 30% as the testing set):
+We partition the data into training and testing sets using a 70-30 percentage split (70% of the original data as the training set, and 30% as the testing set) in order to examine the performance of the models on future data.
 
 ```{r, echo=F, warning=F}
 set.seed(123)
@@ -79,7 +79,7 @@ cancer_train<-cancer_binary[dt,]
 cancer_test<-cancer_binary[-dt,]
 ```
 
-# Exploratory Data Analysis 
+## Exploratory Data Analysis 
 
 ```{r, echo=F, warning=F, fig.height = 2, fig.width = 2, fig.cap = "Distribution of Malignant and Benign Tumors"}
 options(repr.plot.width = 10, repr.plot.height = 5)
@@ -87,9 +87,9 @@ ggplot(data = cancer, mapping = aes(x = diagnosis)) +
   geom_bar()
 ```
 
-The bar plot shows that there is a larger number of benign than malignant cancer. 
+The bar plot (Figure 1) shows that there is a larger number of benign than malignant tumors. 
 
-We divide the data into 3 categories according to their features.
+We divide the data into 3 categories according to their features, namely, mean, standard error and worst.
 ```{r, echo=F, warning=F}
 features_mean= cancer[2:11]
 features_se= cancer[12:21]
@@ -101,7 +101,7 @@ library(corrplot)
 corrplot(cor(features_mean))
 ```
 
-Major observations: 
+Based on the correlation matrix (Figure 2), we have several major observations: 
 
 - Radius_mean, perimeter_mean, and area_mean are highly correlated.
 
@@ -130,11 +130,11 @@ pairs(cancer[2:11],
              )
 ```
 
-We observe from the pairwise scatterplot matrix above that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `parameter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `parameter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
+Furthermore, we observe from the pairwise scatterplot matrix (Figure 3) that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `parameter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `parameter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
 
 We observe that there does not seem to be a separating hyperplane for the two classes for predictors in the relationship between `texture_mean` and `symmetry_mean`, and between `smoothness_mean` and  `fractal_dimension_mean` since the observations in two classes mingle together. This hints at the fact that these predictors might not be helpful for the two class classification problem, which we will filter out in our model through variable selection.
 
-The distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors here:
+According to the distribution of predictors by diagnosis types in Figure 5, the distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors in Figure 4:
 
 ```{r, warning = F, echo=F, fig.height = 2, fig.width = 5, fig.cap = "Distribution of concavity mean and concavity point mean"}
 library(cowplot)
@@ -209,12 +209,21 @@ df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
 
 We found that while predictors `concavity_mean`, `concave_points_mean`,`area_se`, `radius_worst`, `concave_points_se`, `area_worst`, `compactness_worst`, `concavity_worst`, `concave_points_worst` and `concavity_se` are positively associated with the response log odds, predictors `radius_mean`, `compactness_se` and `compactness_mean` are negatively associated with the response log odds. Of all the predictors, `concave_points_se` and `compactness_mean` have the largest magnitude, and therefore are the most significant predictors. For each 0.01 additional unit increase in `concave_points_se`, the log odds of the probability that a patient is diagnosed as malignant cancer tends to decrease by 34.85% holding all else constant. On the other hand, for each 0.01 additional unit increase in `concavity_se`, the log odds of the probability that a patient is diagnosed as malignant cancer tends to decrease by 31.2549% holding all else constant. By the interaction term, for each 0.01 additional unit increase in `compactness_mean`, the coefficient of `concave_points_mean` is expected to increase by 0.745208, holding all else constant. 
 
+```{r, echo = F, warning = F}
+summary1<-data.frame(unclass(summary(cancer_train$compactness_mean)), check.names = FALSE, stringsAsFactors = FALSE)%>%
+  rename("compactness_mean"="unclass(summary(cancer_train$compactness_mean))")
+
+summary1%>%kable()
+
+summary2<-data.frame(unclass(summary(cancer_train$concave_points_mean)), check.names = FALSE, stringsAsFactors = FALSE)%>%
+  rename("concave_points_mean"="unclass(summary(cancer_train$concave_points_mean))")
+
+summary2%>%kable()
+```
+
 To further interpret the interaction between `compactness_mean` and `concave_points_mean`, we created the following visualization with different levels of fixed `compactness_mean`, at 0.01938 (low), 0.26 (medium) and 0.28670 (high). To avoid interpolation, we first looked at the quantile summaries of these two predictors. There seems to be significant interactions between `compactness_mean` and `concave_points_mean`, since the effect of `concave_points_mean` on the probability changes drastically on the different levels of the `compactness_mean_level` values. For high and medium values of compactness mean level, as the number of concave points increases, the probability that a patient is diagnosed as malignant cancer also tends to increase, and high values of compactness mean level associates with a stronger effect by the number of concave points on this probability. On the other hand, for low values of compactness mean level, the probability tends to stay at nearly 1 and the number of concave points does not affect the probability by a significant amount. Therefore, through this interaction term, we discover that higher levels of compactness mean associates with a stronger effect that concave points mean has on the response probability.
 
-```{r, echo=F, warning=F, out.height  = '80%', out.width = '80%'}
-summary(cancer_train$compactness_mean)
-summary(cancer_train$concave_points_mean)
-
+```{r, echo=F, warning=F, out.height  = '80%', out.width = '80%', fig.cap = "Interaction Term Visualization"}
 df <- data.frame()
 cancer_test_low = cancer_test%>%select(-compactness_mean,-concave_points_mean)
 duprow=cancer_test_low[1,]
@@ -295,8 +304,12 @@ predicted_results<-cbind(predictors,probabilities)%>%
   rename(probabilities=s0)
 predicted_results<-cbind(predicted_results,predicted.classes)%>%
   rename("predicted_class"=s0)
-predicted_results%>%head(12)%>%kable(digits=3)
-# Model accuracy
+
+# print withkableExtra
+dat<-predicted_results%>%head(12)
+dat[1:8]%>%kable(digits=3)
+dat[9:15]%>%kable(digits=3)
+
 observed.classes <- cancer_test$diagnosis
 mean(predicted.classes == observed.classes)
 ```
@@ -327,7 +340,7 @@ summary(best_linear_svm)
 Then we predicted on our test set and obtained the following truth table:
 
 ```{r, echo=F}
-devtools::install_github("yihui/printr")
+# devtools::install_github("yihui/printr")
 require(printr)
 ypred <- predict(best_linear_svm, cancer_test)
 table(predict = ypred, truth = cancer_test$diagnosis_binary)
@@ -395,7 +408,7 @@ best_radial_graph <- tune.out$best.model
 plot(best_radial_graph, cancer_train, texture_se~concavity_mean)
 ```
 
-```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
 plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 ```
 
@@ -455,7 +468,7 @@ concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_
 
 We chose mtry=2, because after tuning mtry, we found that mtry=2 has the lowest OOB error.
 
-```{r}
+```{r, echo=F, warning=F, fig.height = 4, fig.width = 5}
 set.seed(123)
 rf_predictors <- cancer_train %>% select(concave_points_worst, area_worst, perimeter_worst, radius_worst, concave_points_mean, perimeter_mean, concavity_worst, area_se)
 mtry <- tuneRF(rf_predictors, cancer_train$diagnosis_binary, ntreeTry=500,
