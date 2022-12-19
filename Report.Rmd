@@ -329,7 +329,7 @@ We fitted a linear kernel SVM and a radial kernel SVM to compare the performance
 
 We use the predictors selected by the LASSO penalized logistic regression as predictors for the support vector machine model in order to avoid overfitting.
 
-We tune the hyperparameter cost through cross validation considering a range of values from 0.001 to 100, and selected the optimal cost = 0.1 
+We tune the hyperparameter cost through cross validation considering a range of values from 0.001 to 100, and selected the optimal cost = 5 
 
 ```{r}
 set.seed(876)
