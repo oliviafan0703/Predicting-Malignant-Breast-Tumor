@@ -459,7 +459,7 @@ Even though the radial kernel fits the training data more closely due to its hig
 
 ## Model 3: Random Forest
 
-Now, we are going to build a Random Forest model to compare with Lasso and SVM. We chose Random Forest because it uses bootstrap sampling and feature sampling, so it is not affected by multicollinearity that much since it is picking different set of features for different models and of course every model sees a different set of data points. What's more, it is easy and straightforward to interpret a tree model, so it can help us understanding the importance of the variables than LASSO.
+Now, we are going to build a Random Forest model to compare with Lasso and SVM. We chose Random Forest because it uses bootstrap sampling and feature sampling, so it is not affected by multicollinearity that much since it is picking different set of features for different models and of course every model sees a different set of data points. What's more, it is easy and straightforward to interpret a tree model, so it can help us understanding the importance of the variables than the LASSO Penalized Logistic model.
 
 First, We select variables by running a preliminary random forest model with all the variables, to rank their importance. 
 
@@ -514,7 +514,7 @@ From the plot we can see that the most important predictors are: concave_points_
 
 # Conclusion & Future Work
 
-The result of the LASSO model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
+The result of the LASSO Penalized Logistic model shows that radius, compactness, concavity, and concave points are the most important variables. The result of the RF model suggest that radius, perimeter, area, and concave points are the most important variables. We can conclude that nuclear perimeter and compactness was highly significant in differentiating hyperplasia from carcinoma.
 
 Both of the models highlights concave points as the most crucial variable. Concavity is the severity of concave portions of the contour. A high concavity means that the boundary of the cell nucleus has indentations, and thus is rather rough than smooth. Concave points counted the number of concave portions of the contour of the cell nucleus. If the contour contains one real cell, the added concave point separates one cell into two parts. Therefore, the higher number the concave points, the more irregular the shape is. 
 
