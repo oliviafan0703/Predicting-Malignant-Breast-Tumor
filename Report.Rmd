@@ -525,13 +525,13 @@ Our results is correspondent with the clinical evidence. The ductal carcinoma ce
 
 The following two pictures shows the cytological features for benigh Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![Benign Tumor (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
+![Benign (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
 
-![Benign Tumor (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
+![Benign (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
 
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus. We can see from the picture that the cell nucleus is clearly deformed and almost bursting, which confirmed our interpretation to the interaction term. 
 
-![Malignant Tumor](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
+![Malignant](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
 
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%. Both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the both the linear and radial SVM is: 0.041, and in the RF is: 0.068. Therefore, we decided that SVM is a better classification model than RF in this case. 
 
