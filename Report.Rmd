@@ -81,7 +81,7 @@ cancer_test<-cancer_binary[-dt,]
 
 ## Exploratory Data Analysis 
 
-```{r, echo=F, warning=F, fig.height = 2, fig.width = 2, fig.cap = "Distribution of Malignant and Benign Tumors"}
+```{r, echo=F, warning=F, fig.height = 1.5, fig.width = 1.5, fig.cap = "Distribution of Malignant and Benign Tumors"}
 options(repr.plot.width = 10, repr.plot.height = 5)
 ggplot(data = cancer, mapping = aes(x = diagnosis)) +
   geom_bar()
@@ -89,7 +89,14 @@ ggplot(data = cancer, mapping = aes(x = diagnosis)) +
 
 The bar plot (Figure 1) shows that there is a larger number of benign than malignant tumors. 
 
-We divide the data into 3 categories according to their features, namely, mean, standard error and worst.
+\newpage
+
+We divide the data into 3 categories according to their features, namely, mean, standard error and worst. Based on the correlation matrix (Figure 2), we have several major observations: 
+
+- Radius_mean, perimeter_mean, and area_mean are highly correlated.
+
+- Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
+
 ```{r, echo=F, warning=F}
 features_mean= cancer[2:11]
 features_se= cancer[12:21]
@@ -100,12 +107,6 @@ features_worst= cancer[22:31]
 library(corrplot)
 corrplot(cor(features_mean))
 ```
-
-Based on the correlation matrix (Figure 2), we have several major observations: 
-
-- Radius_mean, perimeter_mean, and area_mean are highly correlated.
-
-- Compactness_mean, concavity_mean and concave_points_mean are highly correlated.
 
 
 ```{r, echo=F, warning=F, fig.height = 10, fig.width = 10, fig.cap = "Scatterplot of mean predictors by malignant (red) and benign (blue) tumors" }
@@ -132,21 +133,12 @@ pairs(cancer[2:11],
 
 Furthermore, we observe from the pairwise scatterplot matrix (Figure 3) that the two classifications seem to be generally separable, with distinct regions in the visualization that cleanly cluster without much mingling or mixing. Overall across malignant and benign tumors, there seems to be a strong positive linear relationship between `radius_mean` and `perimeter_mean`, `radius_mean` and `area_mean`, as well as `area_mean` and `perimeter_mean`, which hints again at the collinearity issue which we will later tackle at through variable selection. While the two classifications together constitute a roughly linear relationship between predictors, malignant tumors (red) generally associate with higher values in both predictors accumulating in the right top corner, while benign tumors (blue) generally associate with lower ones in the left bottom corner.
 
+\newpage
+
 We observe that there does not seem to be a separating hyperplane for the two classes for predictors in the relationship between `texture_mean` and `symmetry_mean`, and between `smoothness_mean` and  `fractal_dimension_mean` since the observations in two classes mingle together. This hints at the fact that these predictors might not be helpful for the two class classification problem, which we will filter out in our model through variable selection.
 
-According to the distribution of predictors by diagnosis types in Figure 5, the distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors in Figure 4:
-
-```{r, warning = F, echo=F, fig.height = 2, fig.width = 5, fig.cap = "Distribution of concavity mean and concavity point mean"}
-library(cowplot)
-p1<-ggplot(cancer, aes(x=concavity_mean)) + labs(title = "Distribution of concavity mean")+
-  geom_histogram()
-p2<-ggplot(cancer, aes(x=concave_points_mean)) + labs(title = "Distribution of concavity point mean")+
-  geom_histogram()
-plot_grid(p1, p2, labels = "AUTO")
-```
-
 After deriving the histogram comparing distributions of predictors based on the two classifications, we would like to find features with little overlap between benign and malignant classes which will likely to be significant for diagnosis.
-We plot the distribution of the predictors separated by the benign and malignant classes, and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
+We plot the distribution of the predictors separated by the benign and malignant classes (Figure 4), and observe again that predictors associated with texture, smoothness, symmetry and fractal dimension are inseparable and therefore might not be helpful for the classification problem. For example, the distributions of `smoothness_se`  for benign and malignant cancers almost completely overlap, same do `symmetry_se`, `fractal_dimension_se` and `texture_se`. Therefore, we will consider filter out these predictors in our final model.
 
 ```{r, echo=F, warning=F, fig.height = 15, fig.width = 25, fig.cap = "Distribution of predictors by diagnosis"}
 source("Functions.R")
@@ -163,13 +155,28 @@ df$diagnosis = factor(df$diagnosis, levels = c('B', 'M'))
 plot_data(df, 'diagnosis')
 ```
 
-\newpage
+According to the distribution of predictors by diagnosis types in Figure 4, the distributions of the predictors seem to be all unimodal, with no apparent outliers and generally right-skewed, with `concavity_mean` and `concave_points_mean` being particularly right-skewed, hinting at the high correlation between the two predictors. Hence we want to consider including only one of them in our model. We take a closer look at the distributions of these two predictors in Figure 5:
+
+```{r, warning = F, echo=F, fig.height = 2, fig.width = 5, fig.cap = "Distribution of concavity mean and concavity point mean"}
+library(cowplot)
+p1<-ggplot(cancer, aes(x=concavity_mean)) + labs(title = "Distribution of concavity mean")+
+  geom_histogram()
+p2<-ggplot(cancer, aes(x=concave_points_mean)) + labs(title = "Distribution of concavity point mean")+
+  geom_histogram()
+plot_grid(p1, p2, labels = "AUTO")
+```
+
+\
+\
+\
+\
+\
 
 # Methodology 
 
 ## Model 1: LASSO-Penalized Logistic Regression
 
-We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model. Also because LASSO is a great tool dealing with multicollinearity issue. Since our EDA shows that many of the input variables are correlated, LASSO will drop the highly correlated features.
+We decided to use a LASSO-penalized logistic regression model to perform variable selection by gauging insights into which predictors are the most contributive, since less significant variables are forced to be exactly zero, and the most significant variables are kept in the final model and also since LASSO is a great tool dealing with multicollinearity issue. Since our EDA shows that many of the input variables are correlated, LASSO will drop the highly correlated features.
 
 As explained in our exploratory data analysis above, we filter out predictors associated with texture, smoothness, fractal dimension and symmetry in our model due to the lack of separation in the values of these predictors for the benign and malignant tumor classes.
 
@@ -200,7 +207,7 @@ cv.lasso$lambda.min
 lasso.model <- glmnet(x, y, alpha = 1, family = "binomial",
                       lambda = cv.lasso$lambda.min)
 df<-as.data.frame(as.matrix(coef(lasso.model)))
-df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4)
+df%>%filter(s0!=0)%>%rename("coefficient"=s0)%>%kable(digits=4,caption = "LASSO-Penalized Logistic Model")
 ```
 
 ### Result: Logistic Model
@@ -215,12 +222,12 @@ We found that while predictors `concavity_mean`, `concave_points_mean`,`area_se`
 summary1<-data.frame(unclass(summary(cancer_train$compactness_mean)), check.names = FALSE, stringsAsFactors = FALSE)%>%
   rename("compactness_mean"="unclass(summary(cancer_train$compactness_mean))")
 
-summary1%>%kable()
+summary1%>%kable(caption = "Five number summary of compactness_mean")
 
 summary2<-data.frame(unclass(summary(cancer_train$concave_points_mean)), check.names = FALSE, stringsAsFactors = FALSE)%>%
   rename("concave_points_mean"="unclass(summary(cancer_train$concave_points_mean))")
 
-summary2%>%kable()
+summary2%>%kable(caption = "Five number summary of concave_points_mean")
 ```
 
 To further interpret the interaction between `compactness_mean` and `concave_points_mean`, we created the following visualization with different levels of fixed `compactness_mean`, at 0.01938 (low), 0.26 (medium) and 0.28670 (high). To avoid interpolation, we first looked at the quantile summaries of these two predictors and derived these values from the five number summary. There seems to be significant interactions between `compactness_mean` and `concave_points_mean`, since the effect of `concave_points_mean` on the probability changes drastically on the different levels of the `compactness_mean_level` values. For high and medium values of compactness mean level, as the number of concave points increases, the probability that a patient is diagnosed as malignant cancer also tends to increase, and high values of compactness mean level associates with a stronger effect by the number of concave points on this probability. On the other hand, for low values of compactness mean level, the probability tends to stay at nearly 1 and the number of concave points does not affect the probability by a significant amount. Therefore, through this interaction term, we discover that higher levels of compactness mean associates with a stronger effect that concave points mean has on the response probability.
@@ -310,8 +317,8 @@ predicted_results<-cbind(predicted_results,predicted.classes)%>%
 
 # print withkableExtra
 dat<-predicted_results%>%head(12)
-dat[1:8]%>%kable(digits=4)
-dat[9:15]%>%kable(digits=4)
+dat[1:7]%>%kable(digits=4)
+dat[8:15]%>%kable(digits=4, caption = "Prediction on test set based on logistic model")
 
 observed.classes <- cancer_test$diagnosis
 mean(predicted.classes == observed.classes)
@@ -418,7 +425,7 @@ plot(best_radial_graph, cancer_train, concavity_mean~texture_se)
 
 \newpage
 
-### ROC
+### ROC Diagnosis
 
 We visualize the ROC curves of linear and radial kernel SVMs on test and train data respectively.
 
@@ -495,7 +502,7 @@ confusionMatrix(pred_mix, cancer_test$diagnosis_binary)
 ```
 The RF model yields a 96% accuracy for the testing set. 
 
-```{r, echo=F, warning=F, fig.height = 3, fig.width = 4}
+```{r, echo=F, warning=F, fig.height = 3, fig.width = 4, fig.cap = "Importance in predictors in RF model"}
 ImpDatamix <- as.data.frame(importance(rf_mix))
 ImpDatamix$Var.Names <- row.names(ImpDatamix)
 
@@ -525,13 +532,13 @@ Our results is correspondent with the clinical evidence. The ductal carcinoma ce
 
 The following two pictures shows the cytological features for benign Fibroadenoma and Fibrocystic disease. When the tumor is benign, the cells shows mild variation in size and shape. 
 
-![Benign (1)](pics/IJABMR-3-22-g001.jpeg){height=50%, width=50%}
+![Benign Tumor(1)](pics/IJABMR-3-22-g001.jpeg){height=35%, width=35%}
 
-![Benign (2)](pics/IJABMR-3-22-g002.jpeg){height=50%, width=50%}
+![Benign Tumor(2)](pics/IJABMR-3-22-g002.jpeg){height=35%, width=35%}
 
 However, when the cancer is malignant carcinoma, we can observe loosely arranged clusters of ductal epithelial cells showing nuclear pleomorphism, increased nuclear cytoplasmic ratio, nuclear indentations, and hyperchromatic nucleus. We can see from the picture that the cell nucleus is clearly deformed and almost bursting, which confirmed our interpretation to the interaction term. 
 
-![Malignant](pics/IJABMR-3-22-g004.jpeg){height=50%, width=50%}
+![Malignant tumor](pics/IJABMR-3-22-g004.jpeg){height=35%, width=35%}
 
 When applying these 3 models to the test set, the LASSO-Penalized Logistic model yields an accuracy of 98.8%. Both linear and Radial SVM model yields an accuracy around 97%, and the Random Forest model has an accuracy of 96%. Since breast cancer is a vital disease, false negative is much more dangerous than false positive. The false negative rate in the both the linear and radial SVM is: 0.041, and in the RF is: 0.068. Therefore, we decided that SVM is a better classification model than RF in this case. 
 
